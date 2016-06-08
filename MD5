@@ -1,6 +1,6 @@
-9258316f28a66ac585a01798c9c84567 *DESCRIPTION
+af791ed831f46c7ddf7e2d12c2b3ca0d *DESCRIPTION
 3bcd7b165534f48e08c4fababd87a7d4 *NAMESPACE
-2645e49d6e15c750219edf866c47ad4f *NEWS.md
+3291e994751fd6687fd2663b0c205519 *NEWS.md
 fdfcc93fa1574175fda1f1de4cc6ca26 *R/RcppExports.R
 87095f177c4204132fb5698919b79e79 *R/bernoulli-distribution.R
 5c259a20edc6eeeeec289ccc318b0f81 *R/beta-binomial-distribution.R
@@ -137,8 +137,8 @@ ef62b7934cbae5690cdeed1e07d7cb55 *src/non-standard-t-distribution.cpp
 e4b067934dc9dab4da3859fc43776dee *src/power-distribution.cpp
 dba845a1244eb6de36f6b819c27e814b *src/proportion-distribution.cpp
 3e072f3fe5d0d2d4e82e2378974f3f56 *src/rayleigh-distribution.cpp
-e03be094a4439d701414556d3bb01ae1 *src/shared.cpp
-09503d2c4685623cdca0fd082867a5c6 *src/shared.h
+7c74c3104328940bd5169ee570bd861e *src/shared.cpp
+ee4fe7345329bacd9d79e76bdb3a397e *src/shared.h
 efc1f83378b828edded7b7b4a68142b4 *src/skellam-distribution.cpp
 892df729d080ebf42c4c5e038293937b *src/slash-distribution.cpp
 1f146fd4253425713df93e3b121d3bc9 *src/triangular-distribution.cpp
