@@ -1,0 +1,20 @@
+Package: extraDistr
+Type: Package
+Title: Additional Univariate and Multivariate Distributions
+Version: 1.6.13
+Date: 2016-06-07
+Author: Tymoteusz Wolodzko
+Maintainer: Tymoteusz Wolodzko <twolodzko+extraDistr@gmail.com>
+Description: Density, distribution function, quantile function
+    and random generation for a number of univariate
+    and multivariate distributions.
+License: GPL-2
+LazyData: TRUE
+LinkingTo: Rcpp
+Imports: Rcpp
+Suggests: testthat
+RoxygenNote: 5.0.1
+NeedsCompilation: yes
+Packaged: 2016-06-07 15:21:28 UTC; tymek
+Repository: CRAN
+Date/Publication: 2016-06-08 05:47:04
