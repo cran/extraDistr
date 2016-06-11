@@ -1,6 +1,21 @@
 #include <Rcpp.h>
 #include "shared.h"
-using namespace Rcpp;
+
+using std::pow;
+using std::sqrt;
+using std::abs;
+using std::exp;
+using std::log;
+using std::floor;
+using std::ceil;
+using std::sin;
+using std::cos;
+using std::tan;
+using std::atan;
+using Rcpp::IntegerVector;
+using Rcpp::NumericVector;
+using Rcpp::NumericMatrix;
+
 
 /*
  * 
@@ -18,115 +33,115 @@ using namespace Rcpp;
 // Half-Cauchy
 
 double pdf_hcauchy(double x, double sigma) {
-  if (sigma <= 0) {
+  if (sigma <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (x < 0)
-    return 0;
-  return 2/(M_PI*(1 + pow(x/sigma, 2)))/sigma;
+  if (x < 0.0)
+    return 0.0;
+  return 2.0/(M_PI*(1.0 + pow(x/sigma, 2.0)))/sigma;
 }
 
 double cdf_hcauchy(double x, double sigma) {
-  if (sigma <= 0) {
+  if (sigma <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (x < 0)
-    return 0;
-  return 2/M_PI * atan(x/sigma);
+  if (x < 0.0)
+    return 0.0;
+  return 2.0/M_PI * atan(x/sigma);
 }
 
 double invcdf_hcauchy(double p, double sigma) {
-  if (sigma <= 0 || p < 0 || p > 1) {
+  if (sigma <= 0.0 || p < 0.0 || p > 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  return sigma * tan((M_PI*p)/2);
+  return sigma * tan((M_PI*p)/2.0);
 }
 
 double rng_hcauchy(double sigma) {
-  if (sigma <= 0) {
+  if (sigma <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  return std::abs(R::rcauchy(0, sigma));
+  return abs(R::rcauchy(0.0, sigma));
 }
 
 // Half-t
 
 double pdf_ht(double x, double nu, double sigma) {
-  if (sigma <= 0 || nu <= 0) {
+  if (sigma <= 0.0 || nu <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (x < 0)
-    return 0;
-  return 2 * R::dt(x/sigma, nu, false)/sigma;
+  if (x < 0.0)
+    return 0.0;
+  return 2.0 * R::dt(x/sigma, nu, false)/sigma;
 }
 
 double cdf_ht(double x, double nu, double sigma) {
-  if (sigma <= 0 || nu <= 0) {
+  if (sigma <= 0.0 || nu <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (x < 0)
-    return 0;
-  return 2 * R::pt(x/sigma, nu, true, false) - 1;
+  if (x < 0.0)
+    return 0.0;
+  return 2.0 * R::pt(x/sigma, nu, true, false) - 1.0;
 }
 
 double invcdf_ht(double p, double nu, double sigma) {
-  if (sigma <= 0 || nu <= 0 || p < 0 || p > 1) {
+  if (sigma <= 0.0 || nu <= 0.0 || p < 0.0 || p > 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  return R::qt((p+1)/2, nu, true, false) * sigma;
+  return R::qt((p+1.0)/2.0, nu, true, false) * sigma;
 }
 
 double rng_ht(double nu, double sigma) {
-  if (sigma <= 0 || nu <= 0) {
+  if (sigma <= 0.0 || nu <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  return std::abs(R::rt(nu) * sigma);
+  return abs(R::rt(nu) * sigma);
 }
 
 // Half-normal
 
 double pdf_hnorm(double x, double sigma) {
-  if (sigma <= 0) {
+  if (sigma <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (x < 0)
-    return 0;
-  return 2 * R::dnorm(x, 0, sigma, false);
+  if (x < 0.0)
+    return 0.0;
+  return 2.0 * R::dnorm(x, 0.0, sigma, false);
 }
 
 double cdf_hnorm(double x, double sigma) {
-  if (sigma <= 0) {
+  if (sigma <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (x < 0)
-    return 0;
-  return 2 * R::pnorm(x, 0, sigma, true, false) - 1;
+  if (x < 0.0)
+    return 0.0;
+  return 2.0 * R::pnorm(x, 0.0, sigma, true, false) - 1.0;
 }
 
 double invcdf_hnorm(double p, double sigma) {
-  if (sigma <= 0 || p < 0 || p > 1) {
+  if (sigma <= 0.0 || p < 0.0 || p > 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  return R::qnorm((p+1)/2, 0, sigma, true, false);
+  return R::qnorm((p+1.0)/2.0, 0.0, sigma, true, false);
 }
 
 double rng_hnorm(double sigma) {
-  if (sigma <= 0) {
+  if (sigma <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  return std::abs(R::rnorm(0, sigma));
+  return abs(R::rnorm(0.0, sigma));
 }
 
 
@@ -145,7 +160,7 @@ NumericVector cpp_dhalf(
   NumericVector p(Nmax);
   
   for (int i = 0; i < Nmax; i++) {
-    if (nu[i % nn] == 1) {
+    if (nu[i % nn] == 1.0) {
       p[i] = pdf_hcauchy(x[i % n], sigma[i % ns]);
     } else if (nu[i % nn] == INFINITY) {
       p[i] = pdf_hnorm(x[i % n], sigma[i % ns]);
@@ -177,7 +192,7 @@ NumericVector cpp_phalf(
   NumericVector p(Nmax);
   
   for (int i = 0; i < Nmax; i++) {
-    if (nu[i % nn] == 1) {
+    if (nu[i % nn] == 1.0) {
       p[i] = cdf_hcauchy(x[i % n], sigma[i % ns]);
     } else if (nu[i % nn] == INFINITY) {
       p[i] = cdf_hnorm(x[i % n], sigma[i % ns]);
@@ -188,7 +203,7 @@ NumericVector cpp_phalf(
   
   if (!lower_tail)
     for (int i = 0; i < Nmax; i++)
-      p[i] = 1-p[i];
+      p[i] = 1.0 - p[i];
   
   if (log_prob)
     for (int i = 0; i < Nmax; i++)
@@ -219,10 +234,10 @@ NumericVector cpp_qhalf(
   
   if (!lower_tail)
     for (int i = 0; i < n; i++)
-      pp[i] = 1-pp[i];
+      pp[i] = 1.0 - pp[i];
   
   for (int i = 0; i < Nmax; i++) {
-    if (nu[i % nn] == 1) {
+    if (nu[i % nn] == 1.0) {
       q[i] = invcdf_hcauchy(pp[i % n], sigma[i % ns]);
     } else if (nu[i % nn] == INFINITY) {
       q[i] = invcdf_hnorm(pp[i % n], sigma[i % ns]);
@@ -247,7 +262,7 @@ NumericVector cpp_rhalf(
   NumericVector x(n);
   
   for (int i = 0; i < n; i++) {
-    if (nu[i % nn] == 1) {
+    if (nu[i % nn] == 1.0) {
       x[i] = rng_hcauchy(sigma[i % ns]);
     } else if (nu[i % nn] == INFINITY) {
       x[i] = rng_hnorm(sigma[i % ns]);

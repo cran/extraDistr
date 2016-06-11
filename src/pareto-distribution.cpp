@@ -1,5 +1,19 @@
 #include <Rcpp.h>
-using namespace Rcpp;
+
+using std::pow;
+using std::sqrt;
+using std::abs;
+using std::exp;
+using std::log;
+using std::floor;
+using std::ceil;
+using std::sin;
+using std::cos;
+using std::tan;
+using std::atan;
+using Rcpp::IntegerVector;
+using Rcpp::NumericVector;
+using Rcpp::NumericMatrix;
 
 
 /*
@@ -18,49 +32,49 @@ using namespace Rcpp;
  */
 
 double pdf_pareto(double x, double a, double b) {
-  if (a <= 0 || b <= 0) {
+  if (a <= 0.0 || b <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
   if (x < b)
-    return 0;
-  return a * pow(b, a) / pow(x, a+1);
+    return 0.0;
+  return a * pow(b, a) / pow(x, a+1.0);
 }
 
 double logpdf_pareto(double x, double a, double b) {
-  if (a <= 0 || b <= 0) {
+  if (a <= 0.0 || b <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
   if (x < b)
     return -INFINITY;
-  return log(a) + log(b)*a - log(x)*(a+1);
+  return log(a) + log(b)*a - log(x)*(a+1.0);
 }
 
 double cdf_pareto(double x, double a, double b) {
-  if (a <= 0 || b <= 0) {
+  if (a <= 0.0 || b <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
   if (x < b)
-    return 0;
-  return 1 - pow(b/x, a);
+    return 0.0;
+  return 1.0 - pow(b/x, a);
 }
 
 double invcdf_pareto(double p, double a, double b) {
-  if (a <= 0 || b <= 0 || p < 0 || p > 1) {
+  if (a <= 0.0 || b <= 0.0 || p < 0.0 || p > 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  return b / pow(1-p, 1/a);
+  return b / pow(1.0-p, 1.0/a);
 }
 
 double invcdf_pareto2(double p, double a, double b) {
-  if (a <= 0 || b <= 0) {
+  if (a <= 0.0 || b <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  return exp(log(b) - log(1-p)*(1/a));
+  return exp(log(b) - log(1.0-p)*(1.0/a));
 }
 
 
@@ -108,7 +122,7 @@ NumericVector cpp_ppareto(
 
   if (!lower_tail)
     for (int i = 0; i < Nmax; i++)
-      p[i] = 1-p[i];
+      p[i] = 1.0 - p[i];
 
   if (log_prob)
     for (int i = 0; i < Nmax; i++)
@@ -139,7 +153,7 @@ NumericVector cpp_qpareto(
 
   if (!lower_tail)
     for (int i = 0; i < n; i++)
-      pp[i] = 1-pp[i];
+      pp[i] = 1.0 - pp[i];
 
   for (int i = 0; i < Nmax; i++)
     q[i] = invcdf_pareto(pp[i % n], a[i % na], b[i % nb]);
@@ -161,7 +175,7 @@ NumericVector cpp_rpareto(
   NumericVector x(n);
 
   for (int i = 0; i < n; i++) {
-    u = R::runif(0, 1);
+    u = R::runif(0.0, 1.0);
     x[i] = invcdf_pareto(u, a[i % na], b[i % nb]);
   }
 

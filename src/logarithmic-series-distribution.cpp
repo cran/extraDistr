@@ -1,6 +1,20 @@
 #include <Rcpp.h>
 #include "shared.h"
-using namespace Rcpp;
+
+using std::pow;
+using std::sqrt;
+using std::abs;
+using std::exp;
+using std::log;
+using std::floor;
+using std::ceil;
+using std::sin;
+using std::cos;
+using std::tan;
+using std::atan;
+using Rcpp::IntegerVector;
+using Rcpp::NumericVector;
+using Rcpp::NumericMatrix;
 
 
 /*
@@ -19,53 +33,55 @@ using namespace Rcpp;
 
 
 double pdf_lgser(double x, double theta) {
-  if (theta <= 0 || theta >= 1) {
+  if (theta <= 0.0 || theta >= 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (!isInteger(x) || x < 1)
-    return 0;
-  double a = -1/log(1-theta);
+  if (!isInteger(x) || x < 1.0)
+    return 0.0;
+  double a = -1.0/log(1.0 - theta);
   return a * pow(theta, x) / x;
 }
 
 
 double cdf_lgser(double x, double theta) {
-  if (theta <= 0 || theta >= 1) {
+  if (theta <= 0.0 || theta >= 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (x < 1)
-    return 0;
+  if (x < 1.0)
+    return 0.0;
   if (std::isinf(x))
-    return 1;
+    return 1.0;
   
-  double a = -1/log(1-theta);
-  double b = 0;
+  double a = -1.0/log(1.0 - theta);
+  double b = 0.0;
   
-  for (int k = 1; k < x+1; k++)
-    b += pow(theta, k) / k;
+  for (int k = 1; k < static_cast<int>(x)+1; k++) {
+    double dk = static_cast<double>(k);
+    b += pow(theta, dk) / dk;
+  }
   
   return a * b;
 }
 
 
 double invcdf_lgser(double p, double theta) {
-  if (theta <= 0 || theta >= 1) {
+  if (theta <= 0.0 || theta >= 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
   
-  if (p == 1)
+  if (p == 1.0)
     return INFINITY;
   
-  double pk = -theta/log(1-theta);
-  int k = 1;
+  double pk = -theta/log(1.0 - theta);
+  double k = 1.0;
   
   while (p > pk) {
     p -= pk;
-    pk *= theta * k/(k+1);
-    k++;
+    pk *= theta * k/(k+1.0);
+    k += 1.0;
   }
   return k;
 }
@@ -111,7 +127,7 @@ NumericVector cpp_plgser(
 
   if (!lower_tail)
     for (int i = 0; i < Nmax; i++)
-      p[i] = 1-p[i];
+      p[i] = 1.0 - p[i];
 
   if (log_prob)
     for (int i = 0; i < Nmax; i++)
@@ -140,7 +156,7 @@ NumericVector cpp_qlgser(
   
   if (!lower_tail)
     for (int i = 0; i < n; i++)
-      pp[i] = 1-pp[i];
+      pp[i] = 1.0 - pp[i];
   
   for (int i = 0; i < Nmax; i++)
     x[i] = invcdf_lgser(pp[i % n], theta[i % nt]);
@@ -159,7 +175,7 @@ NumericVector cpp_rlgser(
   NumericVector x(n);
 
   for (int i = 0; i < n; i++) {
-    double u = R::runif(0, 1);
+    double u = R::runif(0.0, 1.0);
     x[i] = invcdf_lgser(u, theta[i % nt]);
   }
 

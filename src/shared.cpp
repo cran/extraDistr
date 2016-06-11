@@ -1,6 +1,6 @@
 #include <Rcpp.h>
 #include "const.h"
-using namespace Rcpp;
+
 
 // Basic functions
 
@@ -9,7 +9,7 @@ bool tol_equal(double x, double y) {
 }
 
 bool isInteger(double x) {
-  if (floor(x) != x) {
+  if (std::floor(x) != x) {
     char msg[55];
     std::snprintf(msg, sizeof(msg), "non-integer x = %f", x);
     Rcpp::warning(msg);
@@ -20,7 +20,7 @@ bool isInteger(double x) {
 
 // Dealing with Inf
 
-bool anyFinite(NumericVector x) {
+bool anyFinite(Rcpp::NumericVector x) {
   int n = x.length();
   for (int i = 0; i < n; i++)
     if (!std::isinf(x[i]))
@@ -28,7 +28,7 @@ bool anyFinite(NumericVector x) {
   return false;
 }
 
-double finite_max(NumericVector x) {
+double finite_max(Rcpp::NumericVector x) {
   double max_x = -INFINITY;
   int n = x.length();
   for (int i = 0; i < n; i++) {
@@ -41,85 +41,39 @@ double finite_max(NumericVector x) {
 // Standard normal
 
 double phi(double x) {
-  return R::dnorm(x, 0, 1, false);
+  return R::dnorm(x, 0.0, 1.0, false);
 }
 
 double Phi(double x) {
-  return R::pnorm(x, 0, 1, true, false);
+  return R::pnorm(x, 0.0, 1.0, true, false);
 }
 
 double InvPhi(double x) {
-  return R::qnorm(x, 0, 1, true, false);
+  return R::qnorm(x, 0.0, 1.0, true, false);
 }
 
 // Factorial
 
-double lfactorial(double x) {
-  return R::lgammafn(x + 1);
+double factorial(double x) {
+  return R::gammafn(x + 1.0);
 }
 
-double factorial(double x) {
-  return R::gammafn(x + 1);
+double lfactorial(double x) {
+  return R::lgammafn(x + 1.0);
 }
 
 // Random generation for Bernoulli
 
 double rng_bernoulli(double p = 0.5) {
-  if (p < 0 || p > 1) {
+  if (p < 0.0 || p > 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  double u = R::runif(0, 1);
-  if (u <= 1-p)
-    return 0;
+  double u = R::runif(0.0, 1.0);
+  if (u <= 1.0 - p)
+    return 0.0;
   else
-    return 1;
+    return 1.0;
 }
  
- // // Error function
- // 
- // double erf(double x) {
- //   return 2 * Phi(x * sqrt(2.0)) - 1;
- // }
- // 
- // double erfc(double x) {
- //   return 2 * R::pnorm(x * sqrt(2.0), 0, 1, false, false);
- // }
- // 
- // double inv_erf(double x) {
- //   return InvPhi((x+1)/2) / sqrt(2.0);
- // }
  
-//  // Multivariate gamma function
-//  
-// double lmvgammafn(double p, double a) {
-//   double prod_gamma = 0;
-//   for (int j = 1; j <= p; j++)
-//     prod_gamma += R::lgammafn(a+(1-j)/2);
-//   return M_PI * (p*(p-1)/4) + prod_gamma;
-// }
-//  
- 
-// /*
-//  * Incomplete gamma function
-//  * 
-//  * pgamma(x, a, ..) currently requires a > 0, whereas the
-//  * incomplete gamma function is also defined for negative a
-//  * 
-//  */
-// 
-// double inc_gamma(double x, double a) {
-//   return R::pgamma(x, a, 1, true, false) * R::gammafn(a);
-// }
-// 
-// double inc_ugamma(double x, double a) {
-//   return R::pgamma(x, a, 1, false, false) * R::gammafn(a);
-// }
-// 
-// double log_inc_gamma(double x, double a) {
-//   return R::pgamma(x, a, 1, true, true) + R::lgammafn(a);
-// }
-// 
-// double log_inc_ugamma(double x, double a) {
-//   return R::pgamma(x, a, 1, false, true) + R::lgammafn(a);
-// }

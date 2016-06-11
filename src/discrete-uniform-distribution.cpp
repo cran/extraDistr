@@ -1,6 +1,21 @@
 #include <Rcpp.h>
 #include "shared.h"
-using namespace Rcpp;
+
+using std::pow;
+using std::sqrt;
+using std::abs;
+using std::exp;
+using std::log;
+using std::floor;
+using std::ceil;
+using std::sin;
+using std::cos;
+using std::tan;
+using std::atan;
+using Rcpp::IntegerVector;
+using Rcpp::NumericVector;
+using Rcpp::NumericMatrix;
+
 
 /*
  * Discrete uniform distribution
@@ -15,57 +30,56 @@ using namespace Rcpp;
 
 
 double pmf_dunif(double x, double min, double max) {
-  if (min > max || std::isinf(min) || std::isinf(max)) {
+  if (min >= max || std::isinf(min) || std::isinf(max) ||
+      floor(min) != min || floor(max) != max) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
   if (x < min || x > max || !isInteger(x))
-    return 0;
-  return 1/(max-min+1);
+    return 0.0;
+  return 1.0/(max-min+1.0);
 }
 
 
 double cdf_dunif(double x, double min, double max) {
-  if (min > max || std::isinf(min) || std::isinf(max)) {
+  if (min >= max || std::isinf(min) || std::isinf(max) ||
+      floor(min) != min || floor(max) != max) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
   if (x < min)
-    return 0;
+    return 0.0;
   else if (x >= max)
-    return 1;
-  return (floor(x)-min+1)/(max-min+1);
+    return 1.0;
+  return (floor(x)-min+1.0)/(max-min+1.0);
 }
 
 double invcdf_dunif(double p, double min, double max) {
-  if (min > max || std::isinf(min) || std::isinf(max)) {
+  if (min >= max || std::isinf(min) || std::isinf(max) ||
+      floor(min) != min || floor(max) != max) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (p <= 0 || p > 1) {
+  if (p <= 0.0 || p > 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  return ceil( p*(max-min+1)+min-1 );
+  return ceil( p*(max-min+1.0)+min-1.0 );
 }
 
 double rng_dunif(double min, double max) {
-  if (min > max || std::isinf(min) || std::isinf(max)) {
+  if (min >= max || std::isinf(min) || std::isinf(max) ||
+      floor(min) != min || floor(max) != max) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
   
-  if (min > 0)
-    min = floor(min) - 1;
-  else
-    min = ceil(min) - 1;
-  
-  if (max > 0)
-    max = ceil(max);
-  else
-    max = floor(max);
-  
-  return ceil(R::runif(min, max));
+  // boundry case for x == min-1
+  double x = min - 1.0;
+  while (x < min) {
+    x = ceil(R::runif(min - 1.0, max));
+  }
+  return x;
 }
 
 
@@ -113,7 +127,7 @@ NumericVector cpp_pdunif(
   
   if (!lower_tail)
     for (int i = 0; i < Nmax; i++)
-      p[i] = 1-p[i];
+      p[i] = 1.0 - p[i];
   
   if (log_prob)
     for (int i = 0; i < Nmax; i++)
@@ -144,7 +158,7 @@ NumericVector cpp_qdunif(
   
   if (!lower_tail)
     for (int i = 0; i < n; i++)
-      pp[i] = 1-pp[i];
+      pp[i] = 1.0 - pp[i];
   
   for (int i = 0; i < Nmax; i++)
     q[i] = invcdf_dunif(pp[i % n], min[i % na], max[i % nb]);

@@ -1,6 +1,21 @@
 #include <Rcpp.h>
 #include "shared.h"
-using namespace Rcpp;
+
+using std::pow;
+using std::sqrt;
+using std::abs;
+using std::exp;
+using std::log;
+using std::floor;
+using std::ceil;
+using std::sin;
+using std::cos;
+using std::tan;
+using std::atan;
+using Rcpp::IntegerVector;
+using Rcpp::NumericVector;
+using Rcpp::NumericMatrix;
+
 
 /*
  * Wald distribution
@@ -16,43 +31,43 @@ using namespace Rcpp;
  */
 
 double pdf_wald(double x, double mu, double lambda) {
-  if (mu <= 0 || lambda <= 0) {
+  if (mu <= 0.0 || lambda <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (x <= 0 || std::isinf(x))
-    return 0;
-  return sqrt(lambda/(2*PI*pow(x, 3))) *
-         exp((-lambda*pow(x-mu, 2))/(2*pow(mu, 2)*x));
+  if (x <= 0.0 || std::isinf(x))
+    return 0.0;
+  return sqrt(lambda/(2.0*PI*pow(x, 3.0))) *
+         exp((-lambda*pow(x-mu, 2.0))/(2.0*pow(mu, 2.0)*x));
 }
 
 double cdf_wald(double x, double mu, double lambda) {
-  if (mu <= 0 || lambda <= 0) {
+  if (mu <= 0.0 || lambda <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (x <= 0)
-    return 0;
+  if (x <= 0.0)
+    return 0.0;
   if (x == INFINITY)
-    return 1;
-  return Phi(sqrt(lambda/x)*(x/mu-1)) +
-         exp((2*lambda)/mu) *
-         Phi(-sqrt(lambda/x)*(x/mu+1));
+    return 1.0;
+  return Phi(sqrt(lambda/x)*(x/mu-1.0)) +
+         exp((2.0*lambda)/mu) *
+         Phi(-sqrt(lambda/x)*(x/mu+1.0));
 }
 
 double rng_wald(double mu, double lambda) {
-  if (mu <= 0 || lambda <= 0) {
+  if (mu <= 0.0 || lambda <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  double u = R::runif(0, 1);
-  double y = pow(R::rnorm(0, 1), 2);
-  double x = mu + (pow(mu, 2)*y)/(2*lambda) - mu/(2*lambda) *
-             sqrt(4*mu*lambda*y+pow(mu, 2)*pow(y, 2));
+  double u = R::runif(0.0, 1.0);
+  double y = pow(R::rnorm(0.0, 1.0), 2.0);
+  double x = mu + (pow(mu, 2.0)*y)/(2.0*lambda) - mu/(2.0*lambda) *
+             sqrt(4.0*mu*lambda*y+pow(mu, 2.0)*pow(y, 2.0));
   if (u <= mu/(mu+x))
     return x;
   else
-    return pow(mu, 2)/x;
+    return pow(mu, 2.0)/x;
 }
 
 
@@ -100,7 +115,7 @@ NumericVector cpp_pwald(
   
   if (!lower_tail)
     for (int i = 0; i < Nmax; i++)
-      p[i] = 1-p[i];
+      p[i] = 1.0 - p[i];
   
   if (log_prob)
     for (int i = 0; i < Nmax; i++)

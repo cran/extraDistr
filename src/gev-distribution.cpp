@@ -1,5 +1,19 @@
 #include <Rcpp.h>
-using namespace Rcpp;
+
+using std::pow;
+using std::sqrt;
+using std::abs;
+using std::exp;
+using std::log;
+using std::floor;
+using std::ceil;
+using std::sin;
+using std::cos;
+using std::tan;
+using std::atan;
+using Rcpp::IntegerVector;
+using Rcpp::NumericVector;
+using Rcpp::NumericMatrix;
 
 
 /*
@@ -26,46 +40,46 @@ using namespace Rcpp;
  */
 
 double pdf_gev(double x, double mu, double sigma, double xi) {
-  if (sigma <= 0) {
+  if (sigma <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
   double z = (x-mu)/sigma;
-  if (1+xi*z > 0) {
-    if (xi != 0)
-      return 1/sigma * pow(1+xi*z, -1-(1/xi)) * exp(-pow(1+xi*z, -1/xi));
+  if (1.0+xi*z > 0.0) {
+    if (xi != 0.0)
+      return 1.0/sigma * pow(1.0+xi*z, -1.0-(1.0/xi)) * exp(-pow(1.0+xi*z, -1.0/xi));
     else
-      return 1/sigma * exp(-z) * exp(-exp(-z));
+      return 1.0/sigma * exp(-z) * exp(-exp(-z));
   } else {
-    return 0;
+    return 0.0;
   }
 }
 
 double cdf_gev(double x, double mu, double sigma, double xi) {
-  if (sigma <= 0) {
+  if (sigma <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
   double z = (x-mu)/sigma;
-  if (1+xi*z > 0) {
-    if (xi != 0)
-      return exp(-pow(1+xi*z, -1/xi));
+  if (1.0+xi*z > 0.0) {
+    if (xi != 0.0)
+      return exp(-pow(1.0+xi*z, -1.0/xi));
     else
       return exp(-exp(-z));
   } else {
-    return 0;
+    return 0.0;
   }
 }
 
 double invcdf_gev(double p, double mu, double sigma, double xi) {
-  if (sigma <= 0 || p < 0 || p > 1) {
+  if (sigma <= 0.0 || p < 0.0 || p > 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (p == 1)
+  if (p == 1.0)
     return INFINITY;
-  if (xi != 0)
-    return mu - sigma/xi * (1 - pow(-log(p), -xi));
+  if (xi != 0.0)
+    return mu - sigma/xi * (1.0 - pow(-log(p), -xi));
   else
     return mu - sigma * log(-log(p));
 }
@@ -119,7 +133,7 @@ NumericVector cpp_pgev(
 
   if (!lower_tail)
     for (int i = 0; i < Nmax; i++)
-      p[i] = 1-p[i];
+      p[i] = 1.0 - p[i];
 
   if (log_prob)
     for (int i = 0; i < Nmax; i++)
@@ -152,7 +166,7 @@ NumericVector cpp_qgev(
 
   if (!lower_tail)
     for (int i = 0; i < n; i++)
-      pp[i] = 1-pp[i];
+      pp[i] = 1.0 - pp[i];
 
   for (int i = 0; i < Nmax; i++)
     q[i] = invcdf_gev(pp[i % n], mu[i % nm], sigma[i % ns], xi[i % nx]);
@@ -176,7 +190,7 @@ NumericVector cpp_rgev(
   NumericVector x(n);
 
   for (int i = 0; i < n; i++) {
-    u = R::runif(0, 1);
+    u = R::runif(0.0, 1.0);
     x[i] = invcdf_gev(u, mu[i % nm], sigma[i % ns], xi[i % nx]);
   }
 

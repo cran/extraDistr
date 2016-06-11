@@ -1,6 +1,21 @@
 #include <Rcpp.h>
 #include "shared.h"
-using namespace Rcpp;
+
+using std::pow;
+using std::sqrt;
+using std::abs;
+using std::exp;
+using std::log;
+using std::floor;
+using std::ceil;
+using std::sin;
+using std::cos;
+using std::tan;
+using std::atan;
+using Rcpp::IntegerVector;
+using Rcpp::NumericVector;
+using Rcpp::NumericMatrix;
+
 
 /*
 * Discrete normal distribution
@@ -16,13 +31,13 @@ using namespace Rcpp;
 
 
 double pmf_dnorm(double x, double mu, double sigma) {
-  if (sigma <= 0) {
+  if (sigma <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
   if (!isInteger(x))
-    return 0;
-  return R::pnorm(x+1, mu, sigma, true, false) -
+    return 0.0;
+  return R::pnorm(x+1.0, mu, sigma, true, false) -
          R::pnorm(x, mu, sigma, true, false);
 }
 

@@ -1,6 +1,20 @@
 #include <Rcpp.h>
 #include "shared.h"
-using namespace Rcpp;
+
+using std::pow;
+using std::sqrt;
+using std::abs;
+using std::exp;
+using std::log;
+using std::floor;
+using std::ceil;
+using std::sin;
+using std::cos;
+using std::tan;
+using std::atan;
+using Rcpp::IntegerVector;
+using Rcpp::NumericVector;
+using Rcpp::NumericMatrix;
 
 
 /*
@@ -15,39 +29,39 @@ using namespace Rcpp;
 */
 
 double pdf_bernoulli(double x, double prob) {
-  if (prob < 0 || prob > 1) {
+  if (prob < 0.0 || prob > 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (x == 1)
+  if (x == 1.0)
     return prob;
-  if (x == 0)
-    return 1-prob;
+  if (x == 0.0)
+    return 1.0 - prob;
   Rcpp::warning("improper value of x");
-  return 0;
+  return 0.0;
 }
 
 double cdf_bernoulli(double x, double prob) {
-  if (prob < 0 || prob > 1) {
+  if (prob < 0.0 || prob > 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (x < 0)
-    return 0;
-  if (x < 1)
-    return 1-prob;
-  return 1;
+  if (x < 0.0)
+    return 0.0;
+  if (x < 1.0)
+    return 1.0 - prob;
+  return 1.0;
 }
 
 double invcdf_bernoulli(double p, double prob) {
-  if (prob < 0 || prob > 1 || p < 0 || p > 1) {
+  if (prob < 0.0 || prob > 1.0 || p < 0.0 || p > 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (p <= 1-prob)
-    return 0;
+  if (p <= 1.0 - prob)
+    return 0.0;
   else
-    return 1;
+    return 1.0;
 }
 
 
@@ -91,7 +105,7 @@ NumericVector cpp_pbern(
   
   if (!lower_tail)
     for (int i = 0; i < Nmax; i++)
-      p[i] = 1-p[i];
+      p[i] = 1.0 - p[i];
   
   if (log_prob)
     for (int i = 0; i < Nmax; i++)
@@ -120,7 +134,7 @@ NumericVector cpp_qbern(
   
   if (!lower_tail)
     for (int i = 0; i < n; i++)
-      pp[i] = 1-pp[i];
+      pp[i] = 1.0 - pp[i];
   
   for (int i = 0; i < Nmax; i++)
     q[i] = invcdf_bernoulli(pp[i % n], prob[i % np]);
