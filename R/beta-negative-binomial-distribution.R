@@ -1,6 +1,6 @@
 
 
-#' Beta-Negative Binomial distribution
+#' Beta-negative binomial distribution
 #'
 #' Probability mass function and random generation
 #' for the Beta-binomial distribution.
@@ -21,8 +21,12 @@
 #' f(x) = \frac{\Gamma(r+k)}{k! \Gamma(r)}
 #'        \frac{\mathrm{B}(\alpha+r, \beta+k)}{\mathrm{B}(\alpha, \beta)}
 #' }{
-#' f(x) = gamma(r+k)/(k! gamma(r)) * beta(alpha+r, beta+k)/beta(alpha, beta)
+#' f(x) = \Gamma(r+k)/(k! \Gamma(r)) * B(\alpha+r, \beta+k) / B(\alpha, \beta)
 #' }
+#'
+#' \emph{Warning:} cumulative distribution function is defined as
+#' \eqn{\sum_{k=0}^x f(k)}{f(0)+...+f(x)} so it may be slow for
+#' large detasets.
 #'
 #' @seealso \code{\link[stats]{Beta}}, \code{\link[stats]{NegBinomial}}
 #' 

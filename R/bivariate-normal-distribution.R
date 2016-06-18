@@ -1,9 +1,9 @@
 
 
-#' Bivariate Normal distribution
+#' Bivariate normal distribution
 #'
 #' Density, distribution function and random generation
-#' for the Bivariate Normal distribution.
+#' for the bivariate normal distribution.
 #'
 #' @param x,y	        vectors of quantiles; alternativelly x may be a two-column
 #'                    matrix (or data.frame) and y may be omitted.
@@ -41,6 +41,16 @@
 #' @references 
 #' Mukhopadhyay, N. (2000). Probability and statistical inference.
 #' Chapman & Hall/CRC
+#' 
+#' @examples 
+#' 
+#' y <- x <- seq(-4, 4, by = 0.25)
+#' z <- outer(x, y, function(x, y) dbvnorm(x, y, cor = -0.75))
+#' persp(x, y, z)
+#'
+#' y <- x <- seq(-4, 4, by = 0.25)
+#' z <- outer(x, y, function(x, y) dbvnorm(x, y, cor = -0.25))
+#' persp(x, y, z)
 #'
 #' @seealso \code{\link[stats]{Normal}}
 #'

@@ -4,7 +4,7 @@
 \alias{BivNormal}
 \alias{dbvnorm}
 \alias{rbvnorm}
-\title{Bivariate Normal distribution}
+\title{Bivariate normal distribution}
 \usage{
 dbvnorm(x, y = NULL, mean1 = 0, mean2 = mean1, sd1 = 1, sd2 = sd1,
   cor = 0, log = FALSE)
@@ -28,7 +28,7 @@ the length is taken to be the number required.}
 }
 \description{
 Density, distribution function and random generation
-for the Bivariate Normal distribution.
+for the bivariate normal distribution.
 }
 \details{
 Probability density function
@@ -48,6 +48,17 @@ z_2 = \frac{x_2 - \mu_2}{\sigma_2}
 }{
 z2 = (x2 - \mu2)/\sigma2
 }.
+}
+\examples{
+
+y <- x <- seq(-4, 4, by = 0.25)
+z <- outer(x, y, function(x, y) dbvnorm(x, y, cor = -0.75))
+persp(x, y, z)
+
+y <- x <- seq(-4, 4, by = 0.25)
+z <- outer(x, y, function(x, y) dbvnorm(x, y, cor = -0.25))
+persp(x, y, z)
+
 }
 \references{
 Krishnamoorthy, K. (2006). Handbook of Statistical Distributions

@@ -1,4 +1,12 @@
 
+### 1.7.1
+
+* Added Dirichlet-multinomial and beta prime distributions
+* Code clean-up for categorical distribution
+* Improvements in documentation and examples (e.g. bivariate Poisson,
+  bivariate normal)
+* Other minor improvements in the code
+
 ### 1.7.0
 
 * Cleaning namespace - now mathematical functions are explicitely
