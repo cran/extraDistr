@@ -33,11 +33,14 @@ the length is taken to be the number required.}
 }
 \description{
 Probability mass function, distribution function, quantile function and random generation
-for the Bernoulli distribution.
+for the discrete uniform distribution.
+}
+\details{
+If \code{min == max}, then discrete uniform distribution is a degenerate distribution.
 }
 \examples{
 
-x <- sample.int(10, 1e5, replace = TRUE) 
+x <- rdunif(1e5, 1, 10) 
 xx <- -1:11
 plot(prop.table(table(x)), type = "h")
 lines(xx, ddunif(xx, 1, 10), col = "red")

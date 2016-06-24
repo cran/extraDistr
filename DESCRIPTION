@@ -1,8 +1,8 @@
 Package: extraDistr
 Type: Package
 Title: Additional Univariate and Multivariate Distributions
-Version: 1.7.1
-Date: 2016-06-14
+Version: 1.7.2
+Date: 2016-06-20
 Author: Tymoteusz Wolodzko
 Maintainer: Tymoteusz Wolodzko <twolodzko+extraDistr@gmail.com>
 Description: Density, distribution function, quantile function
@@ -16,6 +16,6 @@ Imports: Rcpp
 Suggests: testthat
 RoxygenNote: 5.0.1
 NeedsCompilation: yes
-Packaged: 2016-06-17 19:20:45 UTC; tymek
+Packaged: 2016-06-23 18:25:02 UTC; tymek
 Repository: CRAN
-Date/Publication: 2016-06-18 15:28:47
+Date/Publication: 2016-06-24 11:20:03

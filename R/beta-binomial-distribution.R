@@ -3,7 +3,7 @@
 #' Beta-binomial distribution
 #'
 #' Probability mass function and random generation
-#' for the Beta-binomial distribution.
+#' for the beta-binomial distribution.
 #'
 #' @param x,q	            vector of quantiles.
 #' @param n	              number of observations. If \code{length(n) > 1},
@@ -15,7 +15,11 @@
 #'                        otherwise, \eqn{P[X > x]}.
 #' 
 #' @details
-#'
+#' 
+#' If \eqn{p \sim \mathrm{Beta}(\alpha, \beta)}{p ~ Beta(\alpha, \beta)} and
+#' \eqn{X \sim \mathrm{Binomial}(n, p)}{X ~ Binomial(n, p)}, then 
+#' \eqn{X \sim \mathrm{BetaBinomial}(n, \alpha, \beta)}{X ~ BetaBinomial(n, \alpha, \beta)}.
+#' 
 #' Probability mass function
 #' \deqn{
 #' f(x) = {n \choose x} \frac{\mathrm{B}(x+\alpha, n-x+\beta)}{\mathrm{B}(\alpha, \beta)}
@@ -24,8 +28,8 @@
 #' }
 #'
 #' \emph{Warning:} cumulative distribution function is defined as
-#' \eqn{\sum_{k=0}^x f(k)}{f(0)+...+f(x)} so it may be slow for
-#' large detasets.
+#' \deqn{F(x) = \sum_{k=0}^x f(k)}{F(x) = f(0)+...+f(x)}
+#' so it may be slow for large datasets.
 #'
 #' @seealso \code{\link[stats]{Beta}}, \code{\link[stats]{Binomial}}
 #' 

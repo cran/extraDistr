@@ -30,7 +30,7 @@ using Rcpp::NumericMatrix;
 
 
 double pmf_dunif(double x, double min, double max) {
-  if (min >= max || std::isinf(min) || std::isinf(max) ||
+  if (min > max || std::isinf(min) || std::isinf(max) ||
       floor(min) != min || floor(max) != max) {
     Rcpp::warning("NaNs produced");
     return NAN;
@@ -42,7 +42,7 @@ double pmf_dunif(double x, double min, double max) {
 
 
 double cdf_dunif(double x, double min, double max) {
-  if (min >= max || std::isinf(min) || std::isinf(max) ||
+  if (min > max || std::isinf(min) || std::isinf(max) ||
       floor(min) != min || floor(max) != max) {
     Rcpp::warning("NaNs produced");
     return NAN;
@@ -55,15 +55,14 @@ double cdf_dunif(double x, double min, double max) {
 }
 
 double invcdf_dunif(double p, double min, double max) {
-  if (min >= max || std::isinf(min) || std::isinf(max) ||
-      floor(min) != min || floor(max) != max) {
+  if (min > max || std::isinf(min) || std::isinf(max) ||
+      floor(min) != min || floor(max) != max ||
+      p < 0.0 || p > 1.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (p <= 0.0 || p > 1.0) {
-    Rcpp::warning("NaNs produced");
-    return NAN;
-  }
+  if (p == 0)
+    return min;
   return ceil( p*(max-min+1.0)+min-1.0 );
 }
 

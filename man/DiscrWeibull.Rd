@@ -34,7 +34,7 @@ the length is taken to be the number required.}
 }
 \description{
 Density, distribution function, quantile function and random generation
-for the discrete Weibull distribution.
+for the discrete Weibull (type I) distribution.
 }
 \details{
 Probability mass function
@@ -55,7 +55,7 @@ Quantile function
 \deqn{
 F^{-1}(p) = \left \lceil{\left(\frac{\log(1-p)}{\log(q)}\right)^{1/\beta} - 1}\right \rceil
 }{
-F^-1(p) = ceiling((\log(1-p)/\log(q))^(1/\beta) - 1)
+F^-1(p) = ceiling((log(1-p)/log(q))^(1/\beta) - 1)
 }
 }
 \examples{

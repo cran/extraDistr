@@ -1,4 +1,11 @@
 
+### 1.7.2
+
+* Documentation clean-up
+* Minor improvements and simplifications in C++ code
+* For `min == max` discrete uniform distribution behaves now
+  as degenerate distribution
+
 ### 1.7.1
 
 * Added Dirichlet-multinomial and beta prime distributions

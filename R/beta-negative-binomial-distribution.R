@@ -3,7 +3,7 @@
 #' Beta-negative binomial distribution
 #'
 #' Probability mass function and random generation
-#' for the Beta-binomial distribution.
+#' for the beta-negative binomial distribution.
 #'
 #' @param x,q	            vector of quantiles.
 #' @param n	              number of observations. If \code{length(n) > 1},
@@ -16,17 +16,21 @@
 #'
 #' @details
 #'
+#' If \eqn{p \sim \mathrm{Beta}(\alpha, \beta)}{p ~ Beta(\alpha, \beta)} and
+#' \eqn{X \sim \mathrm{NegBinomial}(r, p)}{X ~ NegBinomial(r, p)}, then 
+#' \eqn{X \sim \mathrm{BetaNegBinomial}(r, \alpha, \beta)}{X ~ BetaNegBinomial(r, \alpha, \beta)}.
+#'
 #' Probability mass function
 #' \deqn{
-#' f(x) = \frac{\Gamma(r+k)}{k! \Gamma(r)}
-#'        \frac{\mathrm{B}(\alpha+r, \beta+k)}{\mathrm{B}(\alpha, \beta)}
+#' f(x) = \frac{\Gamma(r+x)}{x! \Gamma(r)}
+#'        \frac{\mathrm{B}(\alpha+r, \beta+x)}{\mathrm{B}(\alpha, \beta)}
 #' }{
-#' f(x) = \Gamma(r+k)/(k! \Gamma(r)) * B(\alpha+r, \beta+k) / B(\alpha, \beta)
+#' f(x) = \Gamma(r+x)/(x! \Gamma(r)) * B(\alpha+r, \beta+x) / B(\alpha, \beta)
 #' }
 #'
 #' \emph{Warning:} cumulative distribution function is defined as
-#' \eqn{\sum_{k=0}^x f(k)}{f(0)+...+f(x)} so it may be slow for
-#' large detasets.
+#' \deqn{F(x) = \sum_{k=0}^x f(k)}{F(x) = f(0)+...+f(x)}
+#' so it may be slow for large datasets.
 #'
 #' @seealso \code{\link[stats]{Beta}}, \code{\link[stats]{NegBinomial}}
 #' 

@@ -3,7 +3,7 @@
 #' Discrete Weibull distribution (type I)
 #'
 #' Density, distribution function, quantile function and random generation
-#' for the discrete Weibull distribution.
+#' for the discrete Weibull (type I) distribution.
 #'
 #' @param x,q	            vector of quantiles.
 #' @param p	              vector of probabilities.
@@ -35,7 +35,7 @@
 #' \deqn{
 #' F^{-1}(p) = \left \lceil{\left(\frac{\log(1-p)}{\log(q)}\right)^{1/\beta} - 1}\right \rceil
 #' }{
-#' F^-1(p) = ceiling((\log(1-p)/\log(q))^(1/\beta) - 1)
+#' F^-1(p) = ceiling((log(1-p)/log(q))^(1/\beta) - 1)
 #' }
 #'
 #' @references

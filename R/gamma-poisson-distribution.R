@@ -17,23 +17,21 @@
 #'
 #' @details
 #' Gamma-Poisson distribution arises as a continuous mixture of
-#' Poisson distributions, where where the mixing distribution
+#' Poisson distributions, where the mixing distribution
 #' of the Poisson rate \eqn{\lambda} is a gamma distribution.
 #' When \eqn{X \sim \mathrm{Poisson}(\lambda)}{X ~ Poisson(\lambda)}
 #' and \eqn{\lambda \sim \mathrm{Gamma}(\alpha, \beta)}{\lambda ~ Gamma(\alpha, \beta)}, then \eqn{X \sim \mathrm{GammaPoisson}(\alpha, \beta)}{X ~ Gamma-Poisson(\alpha, \beta)}.
 #'
 #' Probability density function (parametrized by scale)
 #' \deqn{
-#' f(x) = \frac{\Gamma(\alpha+x)}{x! \Gamma(\alpha)} p^k (1-p)^\alpha
+#' f(x) = \frac{\Gamma(\alpha+x)}{x! \Gamma(\alpha)} \left(\frac{\beta}{1+\beta}\right)^k \left(1-\frac{\beta}{1+\beta}\right)^\alpha
 #' }{
-#' f(x) = \Gamma(\alpha+x) / (x!*\Gamma(\alpha)) * p^x * (1-p)^\alpha
+#' f(x) = \Gamma(\alpha+x) / (x!*\Gamma(\alpha)) * (\beta/(1+\beta))^x * (1-\beta/(1+\beta))^\alpha
 #' }
 #' 
-#' where \eqn{p = \frac{\beta}{1+\beta}}{p = \beta/(1+\beta)}.
-#' 
 #' \emph{Warning:} cumulative distribution function is defined as
-#' \eqn{\sum_{k=0}^x f(k)}{f(0)+...+f(x)} so it may be slow for
-#' large detasets.
+#' \deqn{F(x) = \sum_{k=0}^x f(k)}{F(x) = f(0)+...+f(x)}
+#' so it may be slow for large datasets.
 #'
 #' @seealso \code{\link[stats]{Gamma}}, \code{\link[stats]{Poisson}}
 #' 
