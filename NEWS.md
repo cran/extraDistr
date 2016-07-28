@@ -1,4 +1,18 @@
 
+### 1.8.0
+
+* Bug fixes in `qtnorm` - now it works properly for
+  non-standard truncated normal
+* Bug fixes for `rmnom` and `rdirmnom` - now they correctly
+  use the `prob` parameter values
+* Minor improvements in `dmvhyper` and `dbvpois`
+* Cleaned-up the documentation
+* Added discrete Laplace distribution
+* Faster RNG generator for Laplace distribution
+* Changes to using lower level RNG functions
+  (`unif_rand`, `norm_rand`) when possible
+* More tests
+
 ### 1.7.2
 
 * Documentation clean-up

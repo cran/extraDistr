@@ -23,8 +23,10 @@ double InvPhi(double x);
 double factorial(double x);
 double lfactorial(double x);
 
-// Random generation for Bernoulli
+// Random generation
 
-double rng_bernoulli(double p);
+double rng_unif();         // standard uniform
+double rng_bern(double p); // Bernoulli distribution
+double rng_sign();         // Rademacher distribution
 
 #endif

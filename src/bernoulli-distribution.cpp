@@ -58,10 +58,7 @@ double invcdf_bernoulli(double p, double prob) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (p <= 1.0 - prob)
-    return 0.0;
-  else
-    return 1.0;
+  return (p <= 1.0 - prob) ? 0.0 : 1.0;
 }
 
 
@@ -153,7 +150,7 @@ NumericVector cpp_rbern(
   NumericVector x(n);
   
   for (int i = 0; i < n; i++)
-    x[i] = rng_bernoulli(prob[i % np]);
+    x[i] = rng_bern(prob[i % np]);
   
   return x;
 }

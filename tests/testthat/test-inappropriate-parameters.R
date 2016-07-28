@@ -40,6 +40,9 @@ test_that("Wrong parameter values in PDF and PMF functions", {
   expect_warning(expect_true(is.nan(ddirichlet(c(0.5, 0.5), c(-1, 0.5)))))
   expect_warning(expect_true(is.nan(ddirichlet(c(0.5, 0.5), c(0.5, -1)))))
   
+  expect_warning(expect_true(is.nan(ddlaplace(1, scale = -1))))
+  expect_warning(expect_true(is.nan(ddlaplace(1, scale = 2))))
+  
   expect_warning(expect_true(is.nan(ddnorm(1, sd = -1))))
   
   expect_warning(expect_true(is.nan(ddunif(1, min = 10, max = 1))))
@@ -116,15 +119,27 @@ test_that("Wrong parameter values in PDF and PMF functions", {
   expect_warning(expect_true(is.nan(dmixpois(0, c(1,2,3), c(1/3,1/4,1/3)))))
   expect_warning(expect_true(is.nan(dmixpois(0, c(1,2,3), c(1/3,1/3,1/4)))))
   
+  expect_warning(expect_true(is.nan(ddirmnom(c(1, 1, 1), 1.5, c(1, 1, 1)))))
+  expect_warning(expect_true(is.nan(ddirmnom(c(1, 1, 1), -3, c(1, 1, 1)))))
+  expect_warning(expect_true(is.nan(ddirmnom(c(1, 1, 1), 3, c(-1, 1, 1)))))
+  expect_warning(expect_true(is.nan(ddirmnom(c(1, 1, 1), 3, c(1, -1, 1)))))
+  expect_warning(expect_true(is.nan(ddirmnom(c(1, 1, 1), 3, c(1, 1, -1)))))
+  
+  expect_warning(expect_true(is.nan(dmnom(c(1, 1, 1), 1.5, c(1/3, 1/3, 1/3)))))
   expect_warning(expect_true(is.nan(dmnom(c(1, 1, 1), 3, c(1/2, 1/2, 1/2)))))
   expect_warning(expect_true(is.nan(dmnom(c(1, 1, 1), 3, c(2, 1/3, 1/3)))))
   expect_warning(expect_true(is.nan(dmnom(c(1, 1, 1), 3, c(1/3, 2, 1/3)))))
   expect_warning(expect_true(is.nan(dmnom(c(1, 1, 1), 3, c(1/3, 1/3, 2)))))
 
-  expect_warning(expect_true(is.nan(dmvhyper(c(1, 1, 2), c(2,3,4), 99))))
-  expect_warning(expect_true(is.nan(dmvhyper(c(1, 1, 2), c(-2,3,4), 99))))
-  expect_warning(expect_true(is.nan(dmvhyper(c(1, 1, 2), c(2,-3,4), 99))))
-  expect_warning(expect_true(is.nan(dmvhyper(c(1, 1, 2), c(2,3,-4), 99))))
+  expect_warning(expect_true(is.nan(dmvhyper(c(1, 2, 2), c(2.5,3,4), 5))))
+  expect_warning(expect_true(is.nan(dmvhyper(c(1, 2, 2), c(2,3.5,4), 5))))
+  expect_warning(expect_true(is.nan(dmvhyper(c(1, 2, 2), c(2,3,4.5), 5))))
+  expect_warning(expect_true(is.nan(dmvhyper(c(1, 2, 2), c(2,3,4), 5.5))))
+  expect_warning(expect_true(is.nan(dmvhyper(c(1, 2, 2), c(-2,3,4), 5))))
+  expect_warning(expect_true(is.nan(dmvhyper(c(1, 2, 2), c(2,-3,4), 5))))
+  expect_warning(expect_true(is.nan(dmvhyper(c(1, 2, 2), c(2,3,-4), 5))))
+  expect_warning(expect_true(is.nan(dmvhyper(c(1, 2, 2), c(2,3,4), -5))))
+  expect_warning(expect_true(is.nan(dmvhyper(c(1, 2, 2), c(2,3,4), 85))))
   
   expect_warning(expect_true(is.nan(dnsbeta(0.5, -1, 1, -2, 2))))
   expect_warning(expect_true(is.nan(dnsbeta(0.5, 1, -1, -2, 2))))
@@ -232,6 +247,9 @@ test_that("Wrong parameter values in CDF functions", {
   
   # expect_warning(expect_true(is.nan(pdirichlet(c(0.5, 0.5), c(-1, 0.5)))))
   # expect_warning(expect_true(is.nan(pdirichlet(c(0.5, 0.5), c(0.5, -1)))))
+  
+  expect_warning(expect_true(is.nan(pdlaplace(1, scale = -1))))
+  expect_warning(expect_true(is.nan(pdlaplace(1, scale = 2))))
   
   expect_warning(expect_true(is.nan(pdnorm(1, sd = -1))))
   
@@ -667,10 +685,18 @@ test_that("Wrong parameter values in RNG functions", {
   expect_warning(expect_true(is.nan(rmixpois(1, c(1,2,3), c(1/3,1/4,1/3)))))
   expect_warning(expect_true(is.nan(rmixpois(1, c(1,2,3), c(1/3,1/3,1/4)))))
   
-  expect_warning(expect_true(all(is.nan(rmnom(c(1, 1, 1), 3, c(1/2, 1/2, 1/2))))))
-  expect_warning(expect_true(all(is.nan(rmnom(c(1, 1, 1), 3, c(2, 1/3, 1/3))))))
-  expect_warning(expect_true(all(is.nan(rmnom(c(1, 1, 1), 3, c(1/3, 2, 1/3))))))
-  expect_warning(expect_true(all(is.nan(rmnom(c(1, 1, 1), 3, c(1/3, 1/3, 2))))))
+  expect_warning(expect_true(all(is.nan(rdirmnom(1, 1.5, c(1, 1, 1))))))
+  expect_warning(expect_true(all(is.nan(rdirmnom(1, -3, c(1, 1, 1))))))
+  expect_warning(expect_true(all(is.nan(rdirmnom(1, 3, c(-1, 1, 1))))))
+  expect_warning(expect_true(all(is.nan(rdirmnom(1, 3, c(1, -1, 1))))))
+  expect_warning(expect_true(all(is.nan(rdirmnom(1, 3, c(1, 1, -1))))))
+  
+  expect_warning(expect_true(all(is.nan(rmnom(1, 1.5, c(1/3, 1/3, 1/3))))))
+  expect_warning(expect_true(all(is.nan(rmnom(1, -3, c(1/3, 1/3, 1/3))))))
+  expect_warning(expect_true(all(is.nan(rmnom(1, 3, c(1/2, 1/2, 1/2))))))
+  expect_warning(expect_true(all(is.nan(rmnom(1, 3, c(2, 1/3, 1/3))))))
+  expect_warning(expect_true(all(is.nan(rmnom(1, 3, c(1/3, 2, 1/3))))))
+  expect_warning(expect_true(all(is.nan(rmnom(1, 3, c(1/3, 1/3, 2))))))
   
   expect_warning(expect_true(all(is.nan(rmvhyper(1, c(2,3,4), 99)))))
   expect_warning(expect_true(all(is.nan(rmvhyper(1, c(-2,3,4), 99)))))

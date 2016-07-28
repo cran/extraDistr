@@ -58,12 +58,12 @@ double cdf_bbinom(double k, double n, double alpha, double beta) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (!isInteger(k) || k < 0.0)
+  if (k < 0.0)
     return 0.0;
   if (k > n)
     return 1.0;
   double p_tmp = 0.0;
-  for (int j = 0; j < static_cast<int>(k)+1; j++)
+  for (int j = 0; j < static_cast<int>(floor(k))+1; j++)
     p_tmp += exp(logpmf_bbinom(static_cast<double>(j), n, alpha, beta));
   return p_tmp;
 }
@@ -123,7 +123,8 @@ NumericVector cpp_pbbinom(
   
   if (nn == 1 && na == 1 && nb == 1) {
     
-    if (alpha[0] < 0.0 || beta[0] < 0.0 || size[0] < 0.0 || floor(size[0]) != size[0]) {
+    if (alpha[0] < 0.0 || beta[0] < 0.0 || size[0] < 0.0 ||
+        floor(size[0]) != size[0]) {
       Rcpp::warning("NaNs produced");
       for (int i = 0; i < n; i++)
         p[i] = NAN;
@@ -142,8 +143,8 @@ NumericVector cpp_pbbinom(
     for (int i = 0; i < n; i++) {
       if (x[i] > size[0]) {
         p[i] = 1.0;
-      } else if (isInteger(x[i]) && x[i] >= 0.0) {
-        p[i] = p_tab[static_cast<int>(x[i])];
+      } else if (x[i] >= 0.0) {
+        p[i] = p_tab[static_cast<int>(floor(x[i]))];
       } else {
         p[i] = 0.0;
       }

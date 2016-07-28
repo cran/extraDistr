@@ -48,10 +48,12 @@ double cdf_gpois(double x, double alpha, double beta) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
-  if (std::isinf(x))
+  if (x == INFINITY)
     return 1.0;
+  if (x < 0.0)
+    return 0.0;
   double p_tmp = 0.0;
-  for (int j = 0; j < static_cast<int>(x)+1; j++)
+  for (int j = 0; j < static_cast<int>(floor(x))+1; j++)
     p_tmp += exp(logpmf_gpois(static_cast<double>(j), alpha, beta));
   return p_tmp;
 }
@@ -116,10 +118,10 @@ NumericVector cpp_pgpois(
                                                alpha[0], beta[0]));
     
     for (int i = 0; i < n; i++) {
-      if (std::isinf(x[i])) {
+      if (x[i] == INFINITY) {
         p[i] = 1.0;
-      } else if (isInteger(x[i]) && x[i] >= 0.0) {
-        p[i] = p_tab[static_cast<int>(x[i])];
+      } else if (x[i] >= 0.0) {
+        p[i] = p_tab[static_cast<int>(floor(x[i]))];
       } else {
         p[i] = 0.0;
       }

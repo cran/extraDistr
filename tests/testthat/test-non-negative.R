@@ -1,7 +1,4 @@
 
-
-context("Testing distributions with non-negative support")
-
 test_that("Zero probabilities for values <0", {
   
   expect_equal(c(0, 0), dbetapr(c(-1, 0), 1, 1, 1))
@@ -17,6 +14,9 @@ test_that("Zero probabilities for values <0", {
   expect_equal(0, dzip(-1, 1, 0.5))
   expect_equal(0, dzib(-1, 1, 0.5, 0.5))
   expect_equal(0, dzinb(-1, 1, 0.5, 0.5))
+  
+  expect_equal(0, dbvpois(-1,1,1,1,1))
+  expect_equal(0, dbvpois(1,-1,1,1,1))
   
   expect_equal(0, dinvchisq(-1, 1))
   expect_equal(0, dinvchisq(-1, 1, 1))

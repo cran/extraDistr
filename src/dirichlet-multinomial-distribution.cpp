@@ -39,7 +39,7 @@ NumericVector cpp_ddirmnom(
     const NumericVector& size,
     const NumericMatrix& alpha,
     bool log_prob = false
-) {
+  ) {
   
   int n = x.nrow();
   int m = x.ncol();
@@ -59,26 +59,33 @@ NumericVector cpp_ddirmnom(
     double prod_tmp = 0.0;
     double sum_alpha = 0.0;
     double sum_x = 0.0;
-    bool wrong_alpha = false;
+    bool wrong_x = false;
+    bool wrong_param = false;
     
-    for (int j = 0; j < m; j++) {
-      if (alpha(i % na, j) <= 0.0) {
-        wrong_alpha = true;
-        break;
+    if (size[i % ns] < 0.0 || floor(size[i % ns]) != size[i % ns]) {
+      wrong_param = true;
+    } else {
+      for (int j = 0; j < m; j++) {
+        if (alpha(i % na, j) <= 0.0) {
+          wrong_param = true;
+          break;
+        }
+        if (x(i % n, j) < 0.0 || !isInteger(x(i % n, j))) {
+          wrong_x = true;
+          break;
+        }
+        sum_x += x(i % n, j);
+        prod_tmp += R::lgammafn(x(i % n, j) + alpha(i % na, j)) -
+          (lfactorial(x(i % n, j)) + R::lgammafn(alpha(i % na, j)));
+        sum_alpha += alpha(i % na, j);
       }
-      if (x(i % n, j) < 0.0 || !isInteger(x(i % n, j))) {
-        p[i] = -INFINITY;
-        break;
-      }
-      sum_x += x(i % n, j);
-      prod_tmp += R::lgammafn(x(i % n, j) + alpha(i % na, j)) -
-        (lfactorial(x(i % n, j)) + R::lgammafn(alpha(i % na, j)));
-      sum_alpha += alpha(i % na, j);
     }
     
-    if (wrong_alpha || !tol_equal(sum_x, size[i % ns])) {
+    if (wrong_param) {
       Rcpp::warning("NaNs produced");
       p[i] = NAN;
+    } else if (sum_x < 0.0 || sum_x != size[i % ns] || wrong_x) {
+      p[i] = -INFINITY;
     } else {
       p[i] = (lfactorial(size[i % ns]) + R::lgammafn(sum_alpha)) -
         R::lgammafn(size[i % ns] + sum_alpha) + prod_tmp;
@@ -98,7 +105,7 @@ NumericMatrix cpp_rdirmnom(
     const int n,
     const NumericVector& size,
     const NumericMatrix& alpha
-) {
+  ) {
   
   int k = alpha.ncol();
   int na = alpha.nrow();
@@ -111,26 +118,37 @@ NumericMatrix cpp_rdirmnom(
   for (int i = 0; i < n; i++) {
     double size_left = size[i % ns];
     double row_sum = 0.0;
-    bool wrong_alpha = false;
-    NumericVector prob(k);
+    bool wrong_param = false;
+    NumericVector pi(k);
     
-    for (int j = 0; j < k; j++) {
-      if (alpha(i % na, j) <= 0.0) {
-        wrong_alpha = true;
-        break;
+    if (size[i % ns] < 0.0 || floor(size[i % ns]) != size[i % ns]) {
+      wrong_param = true;
+    } else {
+      for (int j = 0; j < k; j++) {
+        if (alpha(i % na, j) <= 0.0) {
+          wrong_param = true;
+          break;
+        }
+        pi[j] = R::rgamma(alpha(i % na, j), 1.0);
+        row_sum += pi[j];
       }
-      prob[j] = R::rgamma(alpha(i % na, j), 1.0);
-      row_sum += prob[j];
     }
     
-    if (wrong_alpha) {
+    if (wrong_param) {
       Rcpp::warning("NaNs produced");
       for (int j = 0; j < k; j++)
         x(i, j) = NAN;
+    } else if (size[i % ns] == 0.0) {
+      for (int j = 0; j < k; j++)
+        x(i, j) = 0.0;
     } else {
+      double sum_p = 1.0;
+      double p_tmp;
       for (int j = 0; j < k-1; j++) {
-        x(i, j) = R::rbinom(size_left, prob[j] / row_sum);
+        p_tmp = pi[j] / row_sum;
+        x(i, j) = R::rbinom(size_left, p_tmp/sum_p);
         size_left -= x(i, j);
+        sum_p -= p_tmp;
       }
       x(i, k-1) = size_left;
     }
