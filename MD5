@@ -1,6 +1,6 @@
-31d05de768f8137571edadac6e247a9e *DESCRIPTION
+bec5776d0150d0435fec0ebbe56a44eb *DESCRIPTION
 360a69268613f3a74387b0dc14845400 *NAMESPACE
-49a10f4191cee895c9163fa1fa34975a *NEWS.md
+adb2e8390b2c310baa8ec1bc96bebeb5 *NEWS.md
 c8a5bbdc7adf008de8690957baf5a694 *R/RcppExports.R
 87095f177c4204132fb5698919b79e79 *R/bernoulli-distribution.R
 21e776d7d2e8eeec2b66186e817b76d4 *R/beta-binomial-distribution.R
@@ -163,6 +163,6 @@ ce407f605dba790d131ef0a3e9d33f9d *tests/testthat.R
 8727eb26a558bd085fdb8145def1cdd5 *tests/testthat/test-discrete.R
 ac4e8a5a9486b7ae56a7160c362a5b5c *tests/testthat/test-inappropriate-parameters.R
 e7dafa2039833cb4f9b66b7ac73145cf *tests/testthat/test-infinity.R
-e5d9045ace622ce096b4945486f779a4 *tests/testthat/test-multivariate-distributions.R
+db61093054f8a575d0fe2007aa4cc9f8 *tests/testthat/test-multivariate-distributions.R
 8584316c5cc13d10339728e7ff7e4bcb *tests/testthat/test-non-negative.R
 a70187a9b15277e58a0c323e079d5c2c *tests/testthat/test-quantile-functions.R
