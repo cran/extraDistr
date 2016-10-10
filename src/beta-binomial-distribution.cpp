@@ -34,6 +34,8 @@ using Rcpp::NumericMatrix;
 */
 
 double pmf_bbinom(double k, double n, double alpha, double beta) {
+  if (ISNAN(k) || ISNAN(n) || ISNAN(alpha) || ISNAN(beta))
+    return NA_REAL;
   if (alpha < 0.0 || beta < 0.0 || n < 0.0 || floor(n) != n) {
     Rcpp::warning("NaNs produced");
     return NAN;
@@ -44,6 +46,8 @@ double pmf_bbinom(double k, double n, double alpha, double beta) {
 }
 
 double logpmf_bbinom(double k, double n, double alpha, double beta) {
+  if (ISNAN(k) || ISNAN(n) || ISNAN(alpha) || ISNAN(beta))
+    return NA_REAL;
   if (alpha < 0.0 || beta < 0.0 || n < 0.0 || floor(n) != n) {
     Rcpp::warning("NaNs produced");
     return NAN;
@@ -54,6 +58,8 @@ double logpmf_bbinom(double k, double n, double alpha, double beta) {
 }
 
 double cdf_bbinom(double k, double n, double alpha, double beta) {
+  if (ISNAN(k) || ISNAN(n) || ISNAN(alpha) || ISNAN(beta))
+    return NA_REAL;
   if (alpha < 0.0 || beta < 0.0 || n < 0.0 || floor(n) != n) {
     Rcpp::warning("NaNs produced");
     return NAN;
@@ -69,6 +75,8 @@ double cdf_bbinom(double k, double n, double alpha, double beta) {
 }
 
 double rng_bbinom(double n, double alpha, double beta) {
+  if (ISNAN(n) || ISNAN(alpha) || ISNAN(beta))
+    return NA_REAL;
   if (alpha < 0.0 || beta < 0.0 || n < 0.0 || floor(n) != n) {
     Rcpp::warning("NaNs produced");
     return NAN;
@@ -123,6 +131,12 @@ NumericVector cpp_pbbinom(
   
   if (nn == 1 && na == 1 && nb == 1) {
     
+    if (ISNAN(alpha[0]) || ISNAN(beta[0]) || ISNAN(size[0]) || allNA(x)) {
+      for (int i = 0; i < n; i++)
+        p[i] = NA_REAL;
+      return p;
+    }
+    
     if (alpha[0] < 0.0 || beta[0] < 0.0 || size[0] < 0.0 ||
         floor(size[0]) != size[0]) {
       Rcpp::warning("NaNs produced");
@@ -133,6 +147,11 @@ NumericVector cpp_pbbinom(
     
     double mx = finite_max(x);
     mx = static_cast<int>(std::max(mx, size[0]));
+    if (mx < 0.0) {
+      for (int i = 0; i < n; i++)
+        p[i] = 0;
+      return p;
+    }
     NumericVector p_tab(mx+1);
     
     p_tab[0] = exp(logpmf_bbinom(0.0, size[0], alpha[0], beta[0]));

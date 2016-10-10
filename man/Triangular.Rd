@@ -21,7 +21,7 @@ rtriang(n, a = -1, b = 1, c = (a + b)/2)
 \arguments{
 \item{x, q}{vector of quantiles.}
 
-\item{a, b, c}{minimum, maximum and shape parameters.}
+\item{a, b, c}{minimum, maximum and mode of the distribution.}
 
 \item{log, log.p}{logical; if TRUE, probabilities p are given as log(p).}
 

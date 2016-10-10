@@ -18,49 +18,19 @@
 #'                        
 #' @details
 #' 
-#' Probability mass function of binomial distribution is
+#' Beta can be understood as a distribution of \eqn{x = k/n} proportions in
+#' \eqn{n} trials where the average proportion is denoted as \eqn{\mu},
+#' so it's parameters become \eqn{\alpha = n\mu+1} and
+#' \eqn{\beta = n(1-\mu)+1} and it's density function becomes:
 #' 
 #' \deqn{
-#' {n \choose k} p^k (1-p) ^{n-k} 
+#' f(x) = \frac{1}{\mathrm{B}(n\mu+1, n(1-\mu)+1)} x^{n\mu} (1-x)^{n(1-\mu)}
 #' }{
-#' choose(n,k) * p^k (1-p)^(n-k)
+#' f(x) = 1/(B(n\mu+1, n(1-\mu)+1)) * x^(n\mu) * (1-x)^(n(1-\mu))
 #' }
 #' 
-#' probability density function of beta distribution is
-#' 
-#' \deqn{
-#' \frac{1}{\mathrm{B}(\alpha, \beta)} p^{\alpha-1} (1-p)^{\beta-1}
-#' }{
-#' 1/B(\alpha, \beta) p^(\alpha-1) (1-p)^(\beta-1)
-#' }
-#' 
-#' we can rewrite
-#' 
-#' \deqn{
-#' {n \choose k} = \frac{1}{(n+1) \mathrm{B}(k+1, n-k+1)}
-#' }{
-#' choose(n,k) = 1/((n+1) * B(k+1, n-k+1))
-#' }
-#' 
-#' if we substitute \eqn{k+1 = \alpha} and \eqn{n-k+1 = \beta} then pmf
-#' of binomial distribution becomes
-#' 
-#' \deqn{
-#' \frac{1}{(n+1) \mathrm{B}(\alpha, \beta)} p^{\alpha-1} (1-p)^{\beta-1}
-#' }{
-#' 1/((n+1) * B(\alpha, \beta)) * p^(\alpha-1) * (1-p)^(\beta-1)
-#' }
-#' 
-#' so beta can be understood as a distribution of \eqn{k/n} proportions in
-#' \eqn{n} trials where the average proportion is denoted as \eqn{\mu}
-#' 
-#' \deqn{
-#' \frac{1}{\mathrm{B}(n\mu, n(1-\mu))} p^{n\mu+1} (1-p)^{n(1-\mu)+1}
-#' }{
-#' 1/(B(n\mu, n(1-\mu))) * p^(n\mu+1) * (1-p)^(n(1-\mu)+1)
-#' }
-#' 
-#' Alternatively \eqn{n} may be understood as precision parameter.
+#' Alternatively \eqn{n} may be understood as precision parameter
+#' as described Ferrari and Cribari-Neto (2004).
 #' 
 #' @references
 #' Ferrari, S., & Cribari-Neto, F. (2004). Beta regression for modelling rates and proportions.
@@ -84,7 +54,7 @@
 #' @export
 
 dprop <- function(x, size, mean, log = FALSE) {
-  .Call('extraDistr_cpp_dprop', PACKAGE = 'extraDistr', x, size, mean, log)
+  cpp_dprop(x, size, mean, log)
 }
 
 
@@ -92,7 +62,7 @@ dprop <- function(x, size, mean, log = FALSE) {
 #' @export
 
 pprop <- function(q, size, mean, lower.tail = TRUE, log.p = FALSE) {
-  .Call('extraDistr_cpp_pprop', PACKAGE = 'extraDistr', q, size, mean, lower.tail, log.p)
+  cpp_pprop(q, size, mean, lower.tail, log.p)
 }
 
 
@@ -100,7 +70,7 @@ pprop <- function(q, size, mean, lower.tail = TRUE, log.p = FALSE) {
 #' @export
 
 qprop <- function(p, size, mean, lower.tail = TRUE, log.p = FALSE) {
-  .Call('extraDistr_cpp_qprop', PACKAGE = 'extraDistr', p, size, mean, lower.tail, log.p)
+  cpp_qprop(p, size, mean, lower.tail, log.p)
 }
 
 
@@ -109,6 +79,6 @@ qprop <- function(p, size, mean, lower.tail = TRUE, log.p = FALSE) {
 
 rprop <- function(n, size, mean) {
   if (length(n) > 1) n <- length(n)
-  .Call('extraDistr_cpp_rprop', PACKAGE = 'extraDistr', n, size, mean)
+  cpp_rprop(n, size, mean)
 }
 

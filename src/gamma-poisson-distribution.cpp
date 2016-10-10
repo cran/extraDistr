@@ -31,6 +31,8 @@ using Rcpp::NumericMatrix;
 */
 
 double logpmf_gpois(double x, double alpha, double beta) {
+  if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta))
+    return NA_REAL;
   if (alpha <= 0.0 || beta <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
@@ -44,6 +46,8 @@ double logpmf_gpois(double x, double alpha, double beta) {
 }
 
 double cdf_gpois(double x, double alpha, double beta) {
+  if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta))
+    return NA_REAL;
   if (alpha <= 0.0 || beta <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
@@ -59,6 +63,8 @@ double cdf_gpois(double x, double alpha, double beta) {
 }
 
 double rng_gpois(double alpha, double beta) {
+  if (ISNAN(alpha) || ISNAN(beta))
+    return NA_REAL;
   if (alpha <= 0.0 || beta <= 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
@@ -109,7 +115,18 @@ NumericVector cpp_pgpois(
 
   if (na == 1 && nb == 1 && anyFinite(x)) {
     
+    if (ISNAN(alpha[0]) || ISNAN(beta[0]) || allNA(x)) {
+      for (int i = 0; i < n; i++)
+        p[i] = NA_REAL;
+      return p;
+    }
+    
     double mx = static_cast<int>(finite_max(x));
+    if (mx < 0.0) {
+      for (int i = 0; i < n; i++)
+        p[i] = 0;
+      return p;
+    }
     NumericVector p_tab(mx+1);
     
     p_tab[0] = exp(logpmf_gpois(0, alpha[0], beta[0]));

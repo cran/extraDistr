@@ -8,20 +8,20 @@
 \alias{rtnorm}
 \title{Truncated normal distribution}
 \usage{
-dtnorm(x, mu = 0, sigma = 1, a = -Inf, b = Inf, log = FALSE)
+dtnorm(x, mean = 0, sd = 1, a = -Inf, b = Inf, log = FALSE)
 
-ptnorm(q, mu = 0, sigma = 1, a = -Inf, b = Inf, lower.tail = TRUE,
+ptnorm(q, mean = 0, sd = 1, a = -Inf, b = Inf, lower.tail = TRUE,
   log.p = FALSE)
 
-qtnorm(p, mu = 0, sigma = 1, a = -Inf, b = Inf, lower.tail = TRUE,
+qtnorm(p, mean = 0, sd = 1, a = -Inf, b = Inf, lower.tail = TRUE,
   log.p = FALSE)
 
-rtnorm(n, mu = 0, sigma = 1, a = -Inf, b = Inf)
+rtnorm(n, mean = 0, sd = 1, a = -Inf, b = Inf)
 }
 \arguments{
 \item{x, q}{vector of quantiles.}
 
-\item{mu, sigma}{location and scale parameters. Scale must be positive.}
+\item{mean, sd}{location and scale parameters. Scale must be positive.}
 
 \item{a, b}{minimal and maximal boundries for truncation
 (\code{-Inf} and \code{Inf} by default).}
@@ -77,6 +77,35 @@ lines(xx, dtnorm(xx, 5, 3, b = 7), col = "red")
 hist(ptnorm(x, 5, 3, b = 7))
 plot(ecdf(x))
 lines(xx, ptnorm(xx, 5, 3, b = 7), col = "red", lwd = 2)
+
+R <- 1e5
+partmp <- par(mfrow = c(2,4), mar = c(2,2,2,2))
+
+hist(rtnorm(R), freq= FALSE, main = "", xlab = "", ylab = "")
+lines(xx, dtnorm(xx), col = "red")
+
+hist(rtnorm(R, a = 0), freq= FALSE, main = "", xlab = "", ylab = "")
+lines(xx, dtnorm(xx, a = 0), col = "red")
+
+hist(rtnorm(R, b = 0), freq= FALSE, main = "", xlab = "", ylab = "")
+lines(xx, dtnorm(xx, b = 0), col = "red")
+
+hist(rtnorm(R, a = 0, b = 1), freq= FALSE, main = "", xlab = "", ylab = "")
+lines(xx, dtnorm(xx, a = 0, b = 1), col = "red")
+
+hist(rtnorm(R, a = -1, b = 0), freq= FALSE, main = "", xlab = "", ylab = "")
+lines(xx, dtnorm(xx, a = -1, b = 0), col = "red")
+
+hist(rtnorm(R, mean = -6, a = 0), freq= FALSE, main = "", xlab = "", ylab = "")
+lines(xx, dtnorm(xx, mean = -6, a = 0), col = "red")
+
+hist(rtnorm(R, mean = 8, b = 0), freq= FALSE, main = "", xlab = "", ylab = "")
+lines(xx, dtnorm(xx, mean = 8, b = 0), col = "red")
+
+hist(rtnorm(R, a = 3, b = 5), freq= FALSE, main = "", xlab = "", ylab = "")
+lines(xx, dtnorm(xx, a = 3, b = 5), col = "red")
+
+par(partmp)
 
 }
 \references{

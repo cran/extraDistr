@@ -49,38 +49,61 @@ NumericVector cpp_dmnom(
   if (m != k)
     Rcpp::stop("Number of columns in 'x' does not equal number of columns in 'prob'.");
   
+  double n_fac, prod_xfac, prod_pow_px, sum_x, p_tot;
+  bool wrong_param, wrong_x, missings;
+  
   for (int i = 0; i < Nmax; i++) {
     
-    double n_fac = lfactorial(size[i % ns]);
-    double prod_xfac = 0.0;
-    double prod_pow_px = 0.0;
+    n_fac = lfactorial(size[i % ns]);
+    prod_xfac = 0.0;
+    prod_pow_px = 0.0;
     
-    double sum_x = 0.0;
-    double sum_p = 0.0;
-    bool wrong_param = false;
-    bool wrong_x = false;
+    sum_x = 0.0;
+    p_tot = 0.0;
+    wrong_param = false;
+    wrong_x = false;
+    missings = false;
+    
+    if (ISNAN(size[i % ns]))
+      missings = true;
+    
+    for (int j = 0; j < k; j++) {
+      if (ISNAN(prob(i % np, j)) || ISNAN(x(i % n, j))) {
+        missings = true;
+        break;
+      }
+    }
+    
+    if (missings) {
+      p[i] = NA_REAL;
+      continue;
+    } 
     
     if (size[i % ns] < 0.0 || floor(size[i % ns]) != size[i % ns]) {
       wrong_param = true;
     } else {
+      
       for (int j = 0; j < k; j++) {
         if (prob(i % np, j) < 0.0) {
           wrong_param = true;
           break;
         }
+        p_tot += prob(i % np, j);
+      }
+      
+      for (int j = 0; j < k; j++) {
         if (x(i % n, j) < 0.0 || !isInteger(x(i % n, j))) {
           wrong_x = true;
         } else {
           sum_x += x(i % n, j);
           prod_xfac += lfactorial(x(i % n, j));
-          prod_pow_px += log(prob(i % np, j)) * x(i % n, j);
+          prod_pow_px += log(prob(i % np, j) / p_tot) * x(i % n, j);
         }
-        sum_p += prob(i % np, j);
       }
       
     }
     
-    if (!tol_equal(sum_p, 1.0) || wrong_param) {
+    if (wrong_param) {
       Rcpp::warning("NaNs produced");
       p[i] = NAN; 
     } else if (sum_x < 0.0 || sum_x != size[i % ns] || wrong_x) {
@@ -108,14 +131,34 @@ NumericMatrix cpp_rmnom(
   int k = prob.ncol();
   int np = prob.nrow();
   int ns = size.length();
+  bool wrong_param, missings;
+  double p_tmp, size_left, sum_p, p_tot;
   
   NumericMatrix x(n, k);
   
   for (int i = 0; i < n; i++) {
     
-    double size_left = size[i % ns];
-    double sum_p = 1.0;
-    bool wrong_param = false;
+    size_left = size[i % ns];
+    sum_p = 1.0;
+    p_tot = 0.0;
+    wrong_param = false;
+    missings = false;
+    
+    if (ISNAN(size[i % ns]))
+      missings = true;
+    
+    for (int j = 0; j < k; j++) {
+      if (ISNAN(prob(i % np, j)) || ISNAN(x(i % n, j))) {
+        missings = true;
+        break;
+      }
+    }
+    
+    if (missings) {
+      for (int j = 0; j < k; j++)
+        x(i, j) = NA_REAL;
+      continue;
+    } 
     
     // TODO:
     // sort prob(i,_) first?
@@ -123,21 +166,26 @@ NumericMatrix cpp_rmnom(
     if (size[i % ns] < 0.0 || floor(size[i % ns]) != size[i % ns]) {
       wrong_param = true;
     } else {
-      for (int j = 0; j < k-1; j++) {
+      
+      for (int j = 0; j < k; j++) {
         if (prob(i % np, j) < 0.0) {
           wrong_param = true;
           break;
         }
-        x(i, j) = R::rbinom(size_left, prob(i % np, j)/sum_p);
+        p_tot += prob(i % np, j);
+      }
+      
+      for (int j = 0; j < k-1; j++) {
+        p_tmp = prob(i % np, j)/p_tot;
+        x(i, j) = R::rbinom(size_left, p_tmp/sum_p);
         size_left -= x(i, j);
-        sum_p -= prob(i % np, j);
+        sum_p -= p_tmp;
       }
       
       x(i, k-1) = size_left;
-      sum_p -= prob(i % np, k-1);
     }
     
-    if (wrong_param || !tol_equal(sum_p, 0.0)) {
+    if (wrong_param) {
       Rcpp::warning("NaNs produced");
       for (int j = 0; j < k; j++)
         x(i, j) = NAN;

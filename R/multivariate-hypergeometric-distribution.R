@@ -59,7 +59,7 @@ dmvhyper <- function(x, n, k, log = FALSE) {
   else if (!is.matrix(x))
     x <- as.matrix(x)
   
-  .Call('extraDistr_cpp_dmvhyper', PACKAGE = 'extraDistr', x, n, k, log)
+  cpp_dmvhyper(x, n, k, log)
 }
 
 
@@ -70,14 +70,16 @@ rmvhyper <- function(nn, n, k) {
   if (length(nn) > 1)
     nn <- length(nn)
   
-  if (is.vector(n) && sum(n) == k)
-    return(matrix(rep(n, nn), nrow = nn, byrow = TRUE))
-  
-  if (is.vector(n))
+  if (is.vector(n) && length(k) == 1) {
+    if (anyNA(n) || is.na(k))
+      return(matrix(rep(NA, nn), nrow = nn, byrow = TRUE))
+    if (sum(n) == k)
+      return(matrix(rep(n, nn), nrow = nn, byrow = TRUE))
     n <- matrix(n, nrow = 1)
-  else if (!is.matrix(n))
+  } else if (!is.matrix(n)) {
     n <- as.matrix(n)
+  }
   
-  .Call('extraDistr_cpp_rmvhyper', PACKAGE = 'extraDistr', nn, n, k)
+  cpp_rmvhyper(nn, n, k)
 }
 

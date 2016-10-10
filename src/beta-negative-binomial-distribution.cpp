@@ -34,6 +34,8 @@ using Rcpp::NumericMatrix;
 */
 
 double pmf_bnbinom(double k, double r, double alpha, double beta) {
+  if (ISNAN(k) || ISNAN(r) || ISNAN(alpha) || ISNAN(beta))
+    return NA_REAL;
   if (alpha <= 0.0 || beta <= 0.0 || r < 0.0 || floor(r) != r) {
     Rcpp::warning("NaNs produced");
     return NAN;
@@ -45,6 +47,8 @@ double pmf_bnbinom(double k, double r, double alpha, double beta) {
 }
 
 double logpmf_bnbinom(double k, double r, double alpha, double beta) {
+  if (ISNAN(k) || ISNAN(r) || ISNAN(alpha) || ISNAN(beta))
+    return NA_REAL;
   if (alpha <= 0.0 || beta <= 0.0 || r < 0.0 || floor(r) != r) {
     Rcpp::warning("NaNs produced");
     return NAN;
@@ -56,6 +60,8 @@ double logpmf_bnbinom(double k, double r, double alpha, double beta) {
 }
 
 double cdf_bnbinom(double k, double r, double alpha, double beta) {
+  if (ISNAN(k) || ISNAN(r) || ISNAN(alpha) || ISNAN(beta))
+    return NA_REAL;
   if (alpha < 0.0 || beta < 0.0 || r < 0.0 || floor(r) != r) {
     Rcpp::warning("NaNs produced");
     return NAN;
@@ -71,6 +77,8 @@ double cdf_bnbinom(double k, double r, double alpha, double beta) {
 }
 
 double rng_bnbinom(double r, double alpha, double beta) {
+  if (ISNAN(r) || ISNAN(alpha) || ISNAN(beta))
+    return NA_REAL;
   if (alpha <= 0.0 || beta <= 0.0 || r < 0.0 || floor(r) != r) {
     Rcpp::warning("NaNs produced");
     return NAN;
@@ -125,6 +133,12 @@ NumericVector cpp_pbnbinom(
 
   if (nn == 1 && na == 1 && nb == 1 && anyFinite(x)) {
     
+    if (ISNAN(alpha[0]) || ISNAN(beta[0]) || ISNAN(size[0]) || allNA(x)) {
+      for (int i = 0; i < n; i++)
+        p[i] = NA_REAL;
+      return p;
+    }
+    
     if (alpha[0] < 0.0 || beta[0] < 0.0 || size[0] < 0.0 ||
         floor(size[0]) != size[0]) {
       Rcpp::warning("NaNs produced");
@@ -133,7 +147,12 @@ NumericVector cpp_pbnbinom(
       return p;
     }
     
-    double mx = static_cast<int>(finite_max(x));
+    double mx = finite_max(x);
+    if (mx < 0.0) {
+      for (int i = 0; i < n; i++)
+        p[i] = 0;
+      return p;
+    }
     NumericVector p_tab(mx+1);
     
     p_tab[0] = exp(logpmf_bnbinom(0.0, size[0], alpha[0], beta[0]));

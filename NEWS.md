@@ -1,8 +1,19 @@
 
+### 1.8.2
+
+* Corrected and simplified documentation for `*prop` distribution
+* Categorical, multinomial, mixture of normals and mixture of Poisson
+  distributions are now *less restrictive* about probability parameters
+  and accept any non-negative values. Probability parameter vectors are
+  normalized to sum to one (i.e. `c(1,1,1)` becomes `c(1,1,1)/3`)
+* `NA`'s and `NaN`'s in input now always lead to `NA`'s in output
+* Fixed bugs in `rtnorm`, now it properly handles sampling from extreme
+  tails
+
 ### 1.8.1
 
 * Tests for multivariate distribution now done
-  with tolerance 1e-2
+  with tolerance `1e-2`
 
 ### 1.8.0
 

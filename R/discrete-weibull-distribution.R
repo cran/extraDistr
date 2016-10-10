@@ -68,39 +68,39 @@
 #' plot(ecdf(x))
 #' lines(xx, pdweibull(xx, .32, 1), col = "red", lwd = 2)
 #'
-#' @name DiscrWeibull
-#' @aliases DiscrWeibull
+#' @name DiscreteWeibull
+#' @aliases DiscreteWeibull
 #' @aliases ddweibull
 #' @keywords distribution
 #'
 #' @export
 
 ddweibull <- function(x, shape1, shape2, log = FALSE) {
-  .Call('extraDistr_cpp_ddweibull', PACKAGE = 'extraDistr', x, shape1, shape2, log)
+  cpp_ddweibull(x, shape1, shape2, log)
 }
 
 
-#' @rdname DiscrWeibull
+#' @rdname DiscreteWeibull
 #' @export
 
 pdweibull <- function(q, shape1, shape2, lower.tail = TRUE, log.p = FALSE) {
-  .Call('extraDistr_cpp_pdweibull', PACKAGE = 'extraDistr', q, shape1, shape2, lower.tail, log.p)
+  cpp_pdweibull(q, shape1, shape2, lower.tail, log.p)
 }
 
 
-#' @rdname DiscrWeibull
+#' @rdname DiscreteWeibull
 #' @export
 
 qdweibull <- function(p, shape1, shape2, lower.tail = TRUE, log.p = FALSE) {
-  .Call('extraDistr_cpp_qdweibull', PACKAGE = 'extraDistr', p, shape1, shape2, lower.tail, log.p)
+  cpp_qdweibull(p, shape1, shape2, lower.tail, log.p)
 }
 
 
-#' @rdname DiscrWeibull
+#' @rdname DiscreteWeibull
 #' @export
 
 rdweibull <- function(n, shape1, shape2) {
   if (length(n) > 1) n <- length(n)
-  .Call('extraDistr_cpp_rdweibull', PACKAGE = 'extraDistr', n, shape1, shape2)
+  cpp_rdweibull(n, shape1, shape2)
 }
 

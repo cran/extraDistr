@@ -55,17 +55,36 @@ NumericVector cpp_ddirmnom(
   if (m != k)
     Rcpp::stop("Number of columns in 'x' does not equal number of columns in 'alpha'.");
   
+  double prod_tmp, sum_alpha, sum_x;
+  bool wrong_x, wrong_param, missings;
+  
   for (int i = 0; i < Nmax; i++) {
-    double prod_tmp = 0.0;
-    double sum_alpha = 0.0;
-    double sum_x = 0.0;
-    bool wrong_x = false;
-    bool wrong_param = false;
+    prod_tmp = 0.0;
+    sum_alpha = 0.0;
+    sum_x = 0.0;
+    wrong_x = false;
+    wrong_param = false;
+    missings = false;
     
+    if (ISNAN(size[i % ns]))
+      missings = true;
+    
+    for (int j = 0; j < k; j++) {
+      if (ISNAN(alpha(i % na, j)) || ISNAN(x(i % n, j))) {
+        missings = true;
+        break;
+      }
+    }
+    
+    if (missings) {
+      p[i] = NA_REAL;
+      continue;
+    } 
+      
     if (size[i % ns] < 0.0 || floor(size[i % ns]) != size[i % ns]) {
       wrong_param = true;
     } else {
-      for (int j = 0; j < m; j++) {
+      for (int j = 0; j < k; j++) {
         if (alpha(i % na, j) <= 0.0) {
           wrong_param = true;
           break;
@@ -115,16 +134,40 @@ NumericMatrix cpp_rdirmnom(
   if (k < 2)
     Rcpp::stop("Number of columns in 'alpha' should be >= 2.");
   
+  double size_left, row_sum;
+  bool wrong_param, missings;
+  
   for (int i = 0; i < n; i++) {
-    double size_left = size[i % ns];
-    double row_sum = 0.0;
-    bool wrong_param = false;
+    size_left = size[i % ns];
+    row_sum = 0.0;
+    wrong_param = false;
+    missings = false;
     NumericVector pi(k);
+    
+    if (ISNAN(size[i % ns]))
+      missings = true;
+    
+    for (int j = 0; j < k; j++) {
+      if (ISNAN(alpha(i % na, j))) {
+        missings = true;
+        break;
+      }
+    }
+    
+    if (missings) {
+      for (int j = 0; j < k; j++)
+        x(i, j) = NA_REAL;
+      continue;
+    } 
     
     if (size[i % ns] < 0.0 || floor(size[i % ns]) != size[i % ns]) {
       wrong_param = true;
     } else {
       for (int j = 0; j < k; j++) {
+        if (ISNAN(alpha(i % na, j))) {
+          missings = true;
+          break;
+        }
         if (alpha(i % na, j) <= 0.0) {
           wrong_param = true;
           break;

@@ -26,7 +26,9 @@ using Rcpp::NumericMatrix;
  */
 
 double pmf_skellam(double x, double mu1, double mu2) {
-  if (mu1 < 0.0 || mu2 <= 0.0) {
+  if (ISNAN(x) || ISNAN(mu1) || ISNAN(mu2))
+    return NA_REAL;
+  if (mu1 < 0.0 || mu2 < 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
@@ -36,7 +38,9 @@ double pmf_skellam(double x, double mu1, double mu2) {
 }
 
 double rng_skellam(double mu1, double mu2) {
-  if (mu1 < 0.0 || mu2 <= 0.0) {
+  if (ISNAN(mu1) || ISNAN(mu2))
+    return NA_REAL;
+  if (mu1 < 0.0 || mu2 < 0.0) {
     Rcpp::warning("NaNs produced");
     return NAN;
   }
