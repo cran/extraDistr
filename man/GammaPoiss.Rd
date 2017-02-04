@@ -40,16 +40,33 @@ of the Poisson rate \eqn{\lambda} is a gamma distribution.
 When \eqn{X \sim \mathrm{Poisson}(\lambda)}{X ~ Poisson(\lambda)}
 and \eqn{\lambda \sim \mathrm{Gamma}(\alpha, \beta)}{\lambda ~ Gamma(\alpha, \beta)}, then \eqn{X \sim \mathrm{GammaPoisson}(\alpha, \beta)}{X ~ Gamma-Poisson(\alpha, \beta)}.
 
-Probability density function (parametrized by scale)
+Probability mass function
 \deqn{
-f(x) = \frac{\Gamma(\alpha+x)}{x! \Gamma(\alpha)} \left(\frac{\beta}{1+\beta}\right)^k \left(1-\frac{\beta}{1+\beta}\right)^\alpha
+f(x) = \frac{\Gamma(\alpha+x)}{x! \, \Gamma(\alpha)} \left(\frac{\beta}{1+\beta}\right)^x \left(1-\frac{\beta}{1+\beta}\right)^\alpha
 }{
 f(x) = \Gamma(\alpha+x) / (x!*\Gamma(\alpha)) * (\beta/(1+\beta))^x * (1-\beta/(1+\beta))^\alpha
 }
 
-\emph{Warning:} cumulative distribution function is defined as
+Cumulative distribution function is calculated using recursive algorithm that employs the fact that
+\eqn{\Gamma(x) = (x - 1)!}. This enables re-writing probability mass function as
+
+\deqn{
+f(x) = \frac{(\alpha+x-1)!}{x! \, \Gamma(\alpha)} \left( \frac{\beta}{1+\beta} \right)^x \left( 1- \frac{\beta}{1+\beta} \right)^\alpha
+}{
+f(x) = ((\alpha+x-1)!)/(x!*\Gamma(\alpha))*(\beta/(1+\beta))^x*(1-\beta/(1+\beta))^\alpha
+}
+
+what makes recursive updating from \eqn{x} to \eqn{x+1} easy using the properties of factorials
+
+\deqn{
+f(x+1) = \frac{(\alpha+x-1)! \, (\alpha+x)}{x! \,(x+1) \, \Gamma(\alpha)} \left( \frac{\beta}{1+\beta} \right)^x \left( \frac{\beta}{1+\beta} \right) \left( 1- \frac{\beta}{1+\beta} \right)^\alpha
+}{
+f(x+1) = ((\alpha+x-1)!*(\alpha+x))/(x!*(x+1)*\Gamma(\alpha))*(\beta/(1+\beta))^x*(\beta/(1+\beta))*(1-\beta/(1+\beta))^\alpha
+}
+
+and let's us efficiently calculate cumulative distribution function as a sum of probability mass functions
+
 \deqn{F(x) = \sum_{k=0}^x f(k)}{F(x) = f(0)+...+f(x)}
-so it may be slow for large datasets.
 }
 \examples{
 
@@ -58,6 +75,7 @@ xx <- seq(0, 12000, by = 1)
 hist(x, 100, freq = FALSE)
 lines(xx, dgpois(xx, 7, 0.002), col = "red")
 hist(pgpois(x, 7, 0.002))
+xx <- seq(0, 12000, by = 0.1)
 plot(ecdf(x))
 lines(xx, pgpois(xx, 7, 0.002), col = "red", lwd = 2)
 
@@ -66,4 +84,3 @@ lines(xx, pgpois(xx, 7, 0.002), col = "red", lwd = 2)
 \code{\link[stats]{Gamma}}, \code{\link[stats]{Poisson}}
 }
 \keyword{distribution}
-

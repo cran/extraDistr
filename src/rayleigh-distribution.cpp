@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -8,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
 /*
@@ -32,41 +27,52 @@ using Rcpp::NumericMatrix;
  *
  */
 
-double pdf_rayleigh(double x, double sigma) {
+inline double pdf_rayleigh(double x, double sigma,
+                           bool& throw_warning) {
   if (ISNAN(x) || ISNAN(sigma))
-    return NA_REAL;
+    return x+sigma;
   if (sigma <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
-  if (x < 0.0 || std::isinf(x))
+  if (x < 0.0 || !R_FINITE(x))
     return 0.0;
   return x/pow(sigma, 2.0) * exp(-pow(x, 2.0) / (2.0*pow(sigma, 2.0)));
 }
 
-double cdf_rayleigh(double x, double sigma) {
+inline double cdf_rayleigh(double x, double sigma,
+                           bool& throw_warning) {
   if (ISNAN(x) || ISNAN(sigma))
-    return NA_REAL;
+    return x+sigma;
   if (sigma <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
-  if (x == INFINITY)
-    return 1.0;
-  if (x >= 0.0)
-    return 1.0 - exp(-pow(x, 2.0) / (2.0*pow(sigma, 2.0)));
-  else
+  if (x < 0)
     return 0.0;
+  if (!R_FINITE(x))
+    return 1.0;
+  return 1.0 - exp(-pow(x, 2.0) / (2.0*pow(sigma, 2.0)));
 }
 
-double invcdf_rayleigh(double p, double sigma) {
+inline double invcdf_rayleigh(double p, double sigma,
+                              bool& throw_warning) {
   if (ISNAN(p) || ISNAN(sigma))
-    return NA_REAL;
-  if (p < 0.0 || p > 1.0 || sigma <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    return p+sigma;
+  if (!VALID_PROB(p) || sigma <= 0.0) {
+    throw_warning = true;
     return NAN;
   }
   return sqrt(-2.0*pow(sigma, 2.0) * log(1.0-p));
+}
+
+inline double rng_rayleigh(double sigma, bool& throw_warning) {
+  if (ISNAN(sigma) || sigma <= 0.0) {
+    throw_warning = true;
+    return NA_REAL;
+  }
+  double u = rng_unif();
+  return sqrt(-2.0*pow(sigma, 2.0) * log(u));
 }
 
 
@@ -74,20 +80,26 @@ double invcdf_rayleigh(double p, double sigma) {
 NumericVector cpp_drayleigh(
     const NumericVector& x,
     const NumericVector& sigma,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
 
-  int n = x.length();
-  int ns = sigma.length();
-  int Nmax = std::max(n, ns);
+  int Nmax = std::max({
+    x.length(),
+    sigma.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_rayleigh(x[i % n], sigma[i % ns]);
+    p[i] = pdf_rayleigh(GETV(x, i), GETV(sigma, i),
+                        throw_warning);
 
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -97,24 +109,30 @@ NumericVector cpp_drayleigh(
 NumericVector cpp_prayleigh(
     const NumericVector& x,
     const NumericVector& sigma,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n = x.length();
-  int ns = sigma.length();
-  int Nmax = std::max(n, ns);
+  int Nmax = std::max({
+    x.length(),
+    sigma.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = cdf_rayleigh(x[i % n], sigma[i % ns]);
+    p[i] = cdf_rayleigh(GETV(x, i), GETV(sigma, i),
+                        throw_warning);
 
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
-
+    p = 1.0 - p;
+  
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -124,25 +142,31 @@ NumericVector cpp_prayleigh(
 NumericVector cpp_qrayleigh(
     const NumericVector& p,
     const NumericVector& sigma,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n  = p.length();
-  int ns = sigma.length();
-  int Nmax = std::max(n, ns);
+  int Nmax = std::max({
+    p.length(),
+    sigma.length()
+  });
   NumericVector q(Nmax);
   NumericVector pp = Rcpp::clone(p);
+  
+  bool throw_warning = false;
 
   if (log_prob)
-    for (int i = 0; i < n; i++)
-      pp[i] = exp(pp[i]);
-
+    pp = Rcpp::exp(pp);
+  
   if (!lower_tail)
-    for (int i = 0; i < n; i++)
-      pp[i] = 1.0 - pp[i];
+    pp = 1.0 - pp;
 
   for (int i = 0; i < Nmax; i++)
-    q[i] = invcdf_rayleigh(pp[i % n], sigma[i % ns]);
+    q[i] = invcdf_rayleigh(GETV(pp, i), GETV(sigma, i),
+                           throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return q;
 }
@@ -150,18 +174,19 @@ NumericVector cpp_qrayleigh(
 
 // [[Rcpp::export]]
 NumericVector cpp_rrayleigh(
-    const int n,
+    const int& n,
     const NumericVector& sigma
   ) {
 
-  double u;
-  int ns = sigma.length();
   NumericVector x(n);
+  
+  bool throw_warning = false;
 
-  for (int i = 0; i < n; i++) {
-    u = rng_unif();
-    x[i] = invcdf_rayleigh(u, sigma[i % ns]);
-  }
+  for (int i = 0; i < n; i++)
+    x[i] = rng_rayleigh(GETV(sigma, i), throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
 
   return x;
 }

@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -8,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
 /*
@@ -36,11 +31,12 @@ using Rcpp::NumericMatrix;
 *
 */
 
-double pdf_dweibull(double x, double q, double beta) {
+inline double pdf_dweibull(double x, double q, double beta,
+                           bool& throw_warning) {
   if (ISNAN(x) || ISNAN(q) || ISNAN(beta))
-    return NA_REAL;
+    return x+q+beta;
   if (q <= 0.0 || q >= 1.0 || beta <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   if (!isInteger(x) || x < 0.0)
@@ -48,11 +44,12 @@ double pdf_dweibull(double x, double q, double beta) {
   return pow(q, pow(x, beta)) - pow(q, pow(x+1.0, beta));
 }
 
-double cdf_dweibull(double x, double q, double beta) {
+inline double cdf_dweibull(double x, double q, double beta,
+                           bool& throw_warning) {
   if (ISNAN(x) || ISNAN(q) || ISNAN(beta))
-    return NA_REAL;
+    return x+q+beta;
   if (q <= 0.0 || q >= 1.0 || beta <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   if (x < 0.0)
@@ -60,16 +57,28 @@ double cdf_dweibull(double x, double q, double beta) {
   return 1.0 - pow(q, pow(x+1.0, beta));
 }
 
-double invcdf_dweibull(double p, double q, double beta) {
+inline double invcdf_dweibull(double p, double q, double beta,
+                              bool& throw_warning) {
   if (ISNAN(p) || ISNAN(q) || ISNAN(beta))
-    return NA_REAL;
-  if (q <= 0.0 || q >= 1.0 || beta <= 0.0 || p < 0.0 || p > 1.0) {
-    Rcpp::warning("NaNs produced");
+    return p+q+beta;
+  if (q <= 0.0 || q >= 1.0 || beta <= 0.0 || !VALID_PROB(p)) {
+    throw_warning = true;
     return NAN;
   }
   if (p == 0.0)
     return 0.0;
   return ceil(pow(log(1.0 - p)/log(q), 1.0/beta) - 1.0);
+}
+
+inline double rng_dweibull(double q, double beta,
+                           bool& throw_warning) {
+  if (ISNAN(q) || ISNAN(beta) || q <= 0.0 || q >= 1.0 ||
+      beta <= 0.0) {
+    throw_warning = true;
+    return NA_REAL;
+  }
+  double u = rng_unif();
+  return ceil(pow(log(u)/log(q), 1.0/beta) - 1.0);
 }
 
 
@@ -78,21 +87,27 @@ NumericVector cpp_ddweibull(
     const NumericVector& x,
     const NumericVector& q,
     const NumericVector& beta,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
 
-  int n  = x.length();
-  int nq = q.length();
-  int nb = beta.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nq, nb));
+  int Nmax = std::max({
+    x.length(),
+    q.length(),
+    beta.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_dweibull(x[i % n], q[i % nq], beta[i % nb]);
+    p[i] = pdf_dweibull(GETV(x, i), GETV(q, i),
+                        GETV(beta, i), throw_warning);
 
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -103,26 +118,32 @@ NumericVector cpp_pdweibull(
     const NumericVector& x,
     const NumericVector& q,
     const NumericVector& beta,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n  = x.length();
-  int nq = q.length();
-  int nb = beta.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nq, nb));
+  int Nmax = std::max({
+    x.length(),
+    q.length(),
+    beta.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = cdf_dweibull(x[i % n], q[i % nq], beta[i % nb]);
+    p[i] = cdf_dweibull(GETV(x, i), GETV(q, i),
+                        GETV(beta, i), throw_warning);
 
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
-
+    p = 1.0 - p;
+  
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
-
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
+  
   return p;
 }
 
@@ -132,26 +153,32 @@ NumericVector cpp_qdweibull(
     const NumericVector& p,
     const NumericVector& q,
     const NumericVector& beta,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n  = p.length();
-  int nq = q.length();
-  int nb = beta.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nq, nb));
+  int Nmax = std::max({
+    p.length(),
+    q.length(),
+    beta.length()
+  });
   NumericVector x(Nmax);
   NumericVector pp = Rcpp::clone(p);
+  
+  bool throw_warning = false;
 
   if (log_prob)
-    for (int i = 0; i < n; i++)
-      pp[i] = exp(pp[i]);
-
+    pp = Rcpp::exp(pp);
+  
   if (!lower_tail)
-    for (int i = 0; i < n; i++)
-      pp[i] = 1.0 - pp[i];
+    pp = 1.0 - pp;
 
   for (int i = 0; i < Nmax; i++)
-    x[i] = invcdf_dweibull(pp[i % n], q[i % nq], beta[i % nb]);
+    x[i] = invcdf_dweibull(GETV(pp, i), GETV(q, i),
+                           GETV(beta, i), throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return x;
 }
@@ -159,20 +186,21 @@ NumericVector cpp_qdweibull(
 
 // [[Rcpp::export]]
 NumericVector cpp_rdweibull(
-    const int n,
+    const int& n,
     const NumericVector& q,
     const NumericVector& beta
   ) {
 
-  double u;
-  int nq = q.length();
-  int nb = beta.length();
   NumericVector x(n);
+  
+  bool throw_warning = false;
 
-  for (int i = 0; i < n; i++) {
-    u = rng_unif();
-    x[i] = invcdf_dweibull(u, q[i % nq], beta[i % nb]);
-  }
+  for (int i = 0; i < n; i++)
+    x[i] = rng_dweibull(GETV(q, i), GETV(beta, i),
+                        throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
 
   return x;
 }

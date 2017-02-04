@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -8,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
 /*
@@ -40,11 +35,12 @@ using Rcpp::NumericMatrix;
 *
 */
 
-double pdf_gpd(double x, double mu, double sigma, double xi) {
+inline double pdf_gpd(double x, double mu, double sigma, double xi,
+                      bool& throw_warning) {
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma) || ISNAN(xi))
-    return NA_REAL;
+    return x+mu+sigma+xi;
   if (sigma <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   double z = (x-mu)/sigma;
@@ -61,11 +57,12 @@ double pdf_gpd(double x, double mu, double sigma, double xi) {
   }
 }
 
-double cdf_gpd(double x, double mu, double sigma, double xi) {
+inline double cdf_gpd(double x, double mu, double sigma, double xi,
+                      bool& throw_warning) {
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma) || ISNAN(xi))
-    return NA_REAL;
+    return x+mu+sigma+xi;
   if (sigma <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   double z = (x-mu)/sigma;
@@ -82,17 +79,31 @@ double cdf_gpd(double x, double mu, double sigma, double xi) {
   }
 }
 
-double invcdf_gpd(double p, double mu, double sigma, double xi) {
+inline double invcdf_gpd(double p, double mu, double sigma, double xi,
+                         bool& throw_warning) {
   if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(xi))
-    return NA_REAL;
-  if (sigma <= 0.0 || p < 0.0 || p > 1.0) {
-    Rcpp::warning("NaNs produced");
+    return p+mu+sigma+xi;
+  if (sigma <= 0.0 || !VALID_PROB(p)) {
+    throw_warning = true;
     return NAN;
   }
   if (xi != 0.0)
     return mu + sigma * (pow(1.0-p, -xi)-1.0)/xi;
   else
     return mu - sigma * log(1.0-p);
+}
+
+inline double rng_gpd(double mu, double sigma, double xi,
+                      bool& throw_warning) {
+  if (ISNAN(mu) || ISNAN(sigma) || ISNAN(xi) || sigma <= 0.0) {
+    throw_warning = true;
+    return NA_REAL;
+  }
+  double u = rng_unif();
+  if (xi != 0.0)
+    return mu + sigma * (pow(u, -xi)-1.0)/xi;
+  else
+    return mu - sigma * log(u);
 }
 
 
@@ -102,22 +113,29 @@ NumericVector cpp_dgpd(
     const NumericVector& mu,
     const NumericVector& sigma,
     const NumericVector& xi,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
 
-  int n  = x.length();
-  int nm = mu.length();
-  int ns = sigma.length();
-  int nx = xi.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nm, ns, nx));
+  int Nmax = std::max({
+    x.length(),
+    mu.length(),
+    sigma.length(),
+    xi.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_gpd(x[i % n], mu[i % nm], sigma[i % ns], xi[i % nx]);
+    p[i] = pdf_gpd(GETV(x, i), GETV(mu, i),
+                   GETV(sigma, i), GETV(xi, i),
+                   throw_warning);
 
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -129,26 +147,33 @@ NumericVector cpp_pgpd(
     const NumericVector& mu,
     const NumericVector& sigma,
     const NumericVector& xi,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n  = x.length();
-  int nm = mu.length();
-  int ns = sigma.length();
-  int nx = xi.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nm, ns, nx));
+  int Nmax = std::max({
+    x.length(),
+    mu.length(),
+    sigma.length(),
+    xi.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = cdf_gpd(x[i % n], mu[i % nm], sigma[i % ns], xi[i % nx]);
+    p[i] = cdf_gpd(GETV(x, i), GETV(mu, i),
+                   GETV(sigma, i), GETV(xi, i),
+                   throw_warning);
 
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
-
+    p = 1.0 - p;
+  
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -160,27 +185,34 @@ NumericVector cpp_qgpd(
     const NumericVector& mu,
     const NumericVector& sigma,
     const NumericVector& xi,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n  = p.length();
-  int nm = mu.length();
-  int ns = sigma.length();
-  int nx = xi.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nm, ns, nx));
+  int Nmax = std::max({
+    p.length(),
+    mu.length(),
+    sigma.length(),
+    xi.length()
+  });
   NumericVector q(Nmax);
   NumericVector pp = Rcpp::clone(p);
+  
+  bool throw_warning = false;
 
   if (log_prob)
-    for (int i = 0; i < n; i++)
-      pp[i] = exp(p[i]);
-
+    pp = Rcpp::exp(pp);
+  
   if (!lower_tail)
-    for (int i = 0; i < n; i++)
-      pp[i] = 1.0 - pp[i];
+    pp = 1.0 - pp;
 
   for (int i = 0; i < Nmax; i++)
-    q[i] = invcdf_gpd(pp[i % n], mu[i % nm], sigma[i % ns], xi[i % nx]);
+    q[i] = invcdf_gpd(GETV(pp, i), GETV(mu, i),
+                      GETV(sigma, i), GETV(xi, i),
+                      throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return q;
 }
@@ -188,22 +220,22 @@ NumericVector cpp_qgpd(
 
 // [[Rcpp::export]]
 NumericVector cpp_rgpd(
-    const int n,
+    const int& n,
     const NumericVector& mu,
     const NumericVector& sigma,
     const NumericVector& xi
   ) {
 
-  double u;
-  int nm = mu.length();
-  int ns = sigma.length();
-  int nx = xi.length();
   NumericVector x(n);
+  
+  bool throw_warning = false;
 
-  for (int i = 0; i < n; i++) {
-    u = rng_unif();
-    x[i] = invcdf_gpd(u, mu[i % nm], sigma[i % ns], xi[i % nx]);
-  }
+  for (int i = 0; i < n; i++)
+    x[i] = rng_gpd(GETV(mu, i), GETV(sigma, i),
+                   GETV(xi, i), throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
 
   return x;
 }

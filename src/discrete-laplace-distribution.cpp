@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -8,20 +9,15 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
-double pmf_dlaplace(double x, double p, double mu) {
+inline double pmf_dlaplace(double x, double p, double mu,
+                           bool& throw_warning) {
   if (ISNAN(x) || ISNAN(p) || ISNAN(mu))
-    return NA_REAL;
+    return x+p+mu;
   if (p <= 0.0 || p >= 1.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   if (!isInteger(x))
@@ -29,11 +25,12 @@ double pmf_dlaplace(double x, double p, double mu) {
   return (1.0-p)/(1.0+p) * pow(p, abs(x-mu));
 } 
 
-double cdf_dlaplace(double x, double p, double mu) {
+inline double cdf_dlaplace(double x, double p, double mu,
+                           bool& throw_warning) {
   if (ISNAN(x) || ISNAN(p) || ISNAN(mu))
-    return NA_REAL;
+    return x+p+mu;
   if (p <= 0.0 || p >= 1.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   if (x < 0.0)
@@ -42,12 +39,11 @@ double cdf_dlaplace(double x, double p, double mu) {
     return 1.0 - (pow(p, floor(x-mu)+1.0)/(1.0+p));
 } 
 
-double rng_dlaplace(double p, double mu) {
-  if (ISNAN(p) || ISNAN(mu))
+inline double rng_dlaplace(double p, double mu,
+                           bool& throw_warning) {
+  if (ISNAN(p) || ISNAN(mu) || p <= 0.0 || p >= 1.0) {
+    throw_warning = true;
     return NA_REAL;
-  if (p <= 0.0 || p >= 1.0) {
-    Rcpp::warning("NaNs produced");
-    return NAN;
   }
   double q, u, v;
   q = 1.0 - p;
@@ -60,23 +56,29 @@ double rng_dlaplace(double p, double mu) {
 // [[Rcpp::export]]
 NumericVector cpp_ddlaplace(
     const NumericVector& x,
-    const NumericVector& scale,
     const NumericVector& location,
-    bool log_prob = false
-) {
+    const NumericVector& scale,
+    const bool& log_prob = false
+  ) {
   
-  int n = x.length();
-  int ns = scale.length();
-  int nl = location.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, ns, nl));
+  int Nmax = std::max({
+    x.length(),
+    scale.length(),
+    location.length()
+  });
   NumericVector p(Nmax);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < Nmax; i++)
-    p[i] = pmf_dlaplace(x[i % n], scale[i % ns], location[i % nl]);
+    p[i] = pmf_dlaplace(GETV(x, i), GETV(scale, i),
+                        GETV(location, i), throw_warning);
   
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -85,27 +87,33 @@ NumericVector cpp_ddlaplace(
 // [[Rcpp::export]]
 NumericVector cpp_pdlaplace(
     const NumericVector& x,
-    const NumericVector& scale,
     const NumericVector& location,
-    bool lower_tail = true, bool log_prob = false
-) {
+    const NumericVector& scale,
+    const bool& lower_tail = true,
+    const bool& log_prob = false
+  ) {
   
-  int n = x.length();
-  int ns = scale.length();
-  int nl = location.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, ns, nl));
+  int Nmax = std::max({
+    x.length(),
+    scale.length(),
+    location.length()
+  });
   NumericVector p(Nmax);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < Nmax; i++)
-    p[i] = cdf_dlaplace(x[i % n], scale[i % ns], location[i % nl]);
+    p[i] = cdf_dlaplace(GETV(x, i), GETV(scale, i),
+                        GETV(location, i), throw_warning);
   
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
+    p = 1.0 - p;
   
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -113,17 +121,21 @@ NumericVector cpp_pdlaplace(
 
 // [[Rcpp::export]]
 NumericVector cpp_rdlaplace(
-    const int n,
-    const NumericVector& scale,
-    const NumericVector& location
-) {
+    const int& n,
+    const NumericVector& location,
+    const NumericVector& scale
+  ) {
   
-  int ns = scale.length();
-  int nl = location.length();
   NumericVector x(n);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < n; i++)
-    x[i] = rng_dlaplace(scale[i % ns], location[i % nl]);
+    x[i] = rng_dlaplace(GETV(scale, i), GETV(location, i),
+                        throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
   
   return x;
 }

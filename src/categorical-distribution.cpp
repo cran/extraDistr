@@ -1,6 +1,6 @@
 #include <Rcpp.h>
-#include "const.h"
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -9,11 +9,6 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
 using Rcpp::NumericMatrix;
 
@@ -35,62 +30,64 @@ using Rcpp::NumericMatrix;
 NumericVector cpp_dcat(
     const NumericVector& x,
     const NumericMatrix& prob,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
   
-  int n  = x.length();
-  int np = prob.nrow();
-  int Nmax = Rcpp::max(IntegerVector::create(n, np));
+  int Nmax = std::max({
+    static_cast<int>(x.length()),
+    static_cast<int>(prob.nrow())
+  });
   int k = prob.ncol();
   NumericVector p(Nmax);
-  bool missings;
+  double p_tot;
   
-  for (int i = 0; i < Nmax; i++) {
-    
-    missings = false;
-    
-    if (ISNAN(x[i]))
-      missings = true;
-    
+  bool throw_warning = false;
+  
+  if (k < 2)
+    Rcpp::stop("number of columns in prob is < 2");
+  
+  NumericMatrix prob_tab = Rcpp::clone(prob);
+  
+  for (int i = 0; i < prob.nrow(); i++) {
+    p_tot = 0.0;
     for (int j = 0; j < k; j++) {
-      if (ISNAN(prob(i % np, j))) {
-        missings = true;
+      p_tot += prob_tab(i, j);
+      if (ISNAN(p_tot))
+        break;
+      if (prob_tab(i, j) < 0.0) {
+        p_tot = NAN;
+        throw_warning = true;
         break;
       }
     }
-    
-    if (missings) {
-      p[i] = NA_REAL;
+    for (int j = 0; j < k; j++)
+      prob_tab(i, j) /= p_tot;
+  }
+  
+  for (int i = 0; i < Nmax; i++) {
+    if (ISNAN(GETV(x, i))) {
+      p[i] = GETV(x, i);
       continue;
     }
-    
-    if (!isInteger(x[i]) || x[i] < 1.0 || x[i] > static_cast<double>(k)) {
+    if (!isInteger(GETV(x, i)) || GETV(x, i) < 1.0 ||
+        GETV(x, i) > to_dbl(k)) {
       p[i] = 0.0;
-    } else {
-      double p_tot = 0.0;
-      bool wrong_param = false;
-      for (int j = 0; j < k; j++) {
-        if (prob(i % np, j) < 0.0) {
-          wrong_param = true;
-          break;
-        }
-        p_tot += prob(i % np, j);
-      }
-      
-      if (wrong_param) {
-        Rcpp::warning("NaNs produced");
-        p[i] = NAN;
-      } else {
-        p[i] = prob(i % np, static_cast<int>(x[i] - 1.0)) / p_tot;
-      }
+      continue;
     }
+    if (is_large_int(GETV(x, i))) {
+      Rcpp::warning("NAs introduced by coercion to integer range");
+      p[i] = NA_REAL;
+    }
+    p[i] = GETM(prob_tab, i, to_pos_int(GETV(x, i)) - 1);
   }
 
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
     
-    return p;
+  return p;
 }
 
 
@@ -101,77 +98,68 @@ NumericVector cpp_pcat(
     bool lower_tail = true, bool log_prob = false
   ) {
   
-  int n  = x.length();
-  int np = prob.nrow();
-  int Nmax = Rcpp::max(IntegerVector::create(n, np));
+  int Nmax = std::max({
+    static_cast<int>(x.length()),
+    static_cast<int>(prob.nrow())
+  });
   int k = prob.ncol();
   NumericVector p(Nmax);
-  bool missings;
+  double p_tot;
   
-  for (int i = 0; i < Nmax; i++) {
-    
-    missings = false;
-    
-    if (ISNAN(x[i]))
-      missings = true;
-    
+  bool throw_warning = false;
+
+  if (k < 2)
+    Rcpp::stop("number of columns in prob is < 2");
+  
+  NumericMatrix prob_tab = Rcpp::clone(prob);
+  
+  for (int i = 0; i < prob.nrow(); i++) {
+    p_tot = 0.0;
     for (int j = 0; j < k; j++) {
-      if (ISNAN(prob(i % np, j))) {
-        missings = true;
+      p_tot += prob_tab(i, j);
+      if (ISNAN(p_tot))
+        break;
+      if (prob_tab(i, j) < 0.0) {
+        p_tot = NAN;
+        throw_warning = true;
         break;
       }
     }
-    
-    if (missings) {
-      p[i] = NA_REAL;
+    prob_tab(i, 0) /= p_tot;
+    for (int j = 1; j < k; j++) {
+      prob_tab(i, j) /= p_tot;
+      prob_tab(i, j) += prob_tab(i, j-1);
+    }
+  }
+  
+  for (int i = 0; i < Nmax; i++) {
+    if (ISNAN(GETV(x, i))) {
+      p[i] = GETV(x, i);
       continue;
     }
-    
-    if (x[i] < 1.0) {
+    if (GETV(x, i) < 1.0) {
       p[i] = 0.0;
-    } else if (x[i] > static_cast<double>(k)) {
-      p[i] = 1.0;
-    } else {
-      bool wrong_param = false;
-      p[i] = 0.0;
-      int j = 0;
-      while (j < static_cast<int>(x[i])) {
-        if (prob(i % np, j) < 0.0) {
-          wrong_param = true;
-          break;
-        }
-        p[i] += prob(i % np, j);
-        j++;
-      }
-      double p_tot = p[i];
-      if (!wrong_param) {
-        while (j < k) {
-          if (prob(i % np, j) < 0.0) {
-            wrong_param = true;
-            break;
-          }
-          p_tot += prob(i % np, j);
-          j++;
-        }
-      }
-
-      if (wrong_param) {
-        Rcpp::warning("NaNs produced");
-        p[i] = NAN;
-      } else {
-        p[i] = p[i] / p_tot;
-      }
-      
+      continue;
     }
+    if (GETV(x, i) >= to_dbl(k)) {
+      p[i] = 1.0;
+      continue;
+    }
+    if (is_large_int(GETV(x, i))) {
+      Rcpp::warning("NAs introduced by coercion to integer range");
+      p[i] = NA_REAL;
+    }
+    p[i] = GETM(prob_tab, i, to_pos_int(GETV(x, i)) - 1);
   }
 
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
-    
+    p = 1.0 - p;
+  
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
       
   return p;
 }
@@ -181,147 +169,149 @@ NumericVector cpp_pcat(
 NumericVector cpp_qcat(
     const NumericVector& p,
     const NumericMatrix& prob,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
   
-  int n  = p.length();
-  int np = prob.nrow();
-  int Nmax = Rcpp::max(IntegerVector::create(n, np));
+  int Nmax = std::max({
+    static_cast<int>(p.length()),
+    static_cast<int>(prob.nrow())
+  });
   int k = prob.ncol();
-  NumericVector q(Nmax);
+  NumericVector x(Nmax);
   NumericVector pp = Rcpp::clone(p);
+  int jj;
+  double p_tot;
+  
+  bool throw_warning = false;
+  
+  if (k < 2)
+    Rcpp::stop("number of columns in prob is < 2");
   
   if (log_prob)
-    for (int i = 0; i < n; i++)
-      pp[i] = exp(pp[i]);
-    
-  if (!lower_tail)
-    for (int i = 0; i < n; i++)
-      pp[i] = 1.0 - pp[i];
+    pp = Rcpp::exp(pp);
   
-  int jj;
-  double pp_norm, p_tmp, p_tot;
-  bool wrong_param, missings;
-    
-  for (int i = 0; i < Nmax; i++) {
-    
-    missings = false;
-    
-    if (ISNAN(pp[i]))
-      missings = true;
-    
+  if (!lower_tail)
+    pp = 1.0 - pp;
+  
+  NumericMatrix prob_tab = Rcpp::clone(prob);
+  
+  for (int i = 0; i < prob.nrow(); i++) {
+    p_tot = 0.0;
     for (int j = 0; j < k; j++) {
-      if (ISNAN(prob(i % np, j))) {
-        missings = true;
+      p_tot += prob_tab(i, j);
+      if (ISNAN(p_tot))
+        break;
+      if (prob_tab(i, j) < 0.0) {
+        p_tot = NAN;
+        throw_warning = true;
         break;
       }
     }
-    
-    if (missings) {
-      q[i] = NA_REAL;
+    prob_tab(i, 0) /= p_tot;
+    for (int j = 1; j < k; j++) {
+      prob_tab(i, j) /= p_tot;
+      prob_tab(i, j) += prob_tab(i, j-1);
+    }
+  }
+  
+  for (int i = 0; i < Nmax; i++) {
+    if (ISNAN(GETV(p, i))) {
+      x[i] = GETV(p, i);
+      continue;
+    }
+    if (ISNAN(GETM(prob_tab, i, 0))) {
+      x[i] = GETM(prob_tab, i, 0);
+      continue;
+    }
+    if (GETV(p, i) < 0.0 || GETV(p, i) > 1.0) {
+      x[i] = NAN;
+      throw_warning = true;
+      continue;
+    }
+    if (GETV(p, i) == 0.0) {
+      x[i] = 1.0;
+      continue;
+    }
+    if (GETV(p, i) == 1.0) {
+      x[i] = to_dbl(k);
       continue;
     }
     
-    if (pp[i] < 0.0 || pp[i] > 1.0) {
-      Rcpp::warning("NaNs produced");
-      q[i] = NAN;
-    } else if (pp[i] == 0.0) {
-      q[i] = 1.0; 
-    } else {
-      pp_norm = pp[i];
-      wrong_param = false;
-      p_tmp = 1.0;
-      p_tot = 0.0;
-      jj = 0;
-      
-      for (int j = 0; j < k; j++) {
-        if (prob(i % np, j) < 0.0) {
-          wrong_param = true;
-          break;
-        }
-        p_tot += prob(i % np, j);
-      }
-      
-      for (int j = k-1; j >= 0; j--) {
-        p_tmp -= prob(i % np, j) / p_tot;
-        if (pp_norm > p_tmp) {
-          jj = j;
-          break;
-        }
-      }
-
-      if (wrong_param) {
-        Rcpp::warning("NaNs produced");
-        q[i] = NAN;
-      } else {
-        q[i] = static_cast<double>(jj+1);
+    jj = 1;
+    for (int j = 0; j < k; j++) {
+      if (GETM(prob_tab, i, j) >= GETV(p, i)) {
+        jj = j+1;
+        break;
       }
     }
+    x[i] = to_dbl(jj);
   }
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
       
-  return q;
+  return x;
 }
 
 
 // [[Rcpp::export]]
 NumericVector cpp_rcat(
-    const int n,
+    const int& n,
     const NumericMatrix& prob
   ) {
   
-  int np = prob.nrow();
   int k = prob.ncol();
   NumericVector x(n);
-  
   int jj;
-  double u, p_tmp, p_tot;
-  bool wrong_param, missings;
+  double u, p_tot;
+  
+  bool throw_warning = false;
+  
+  if (k < 2)
+    Rcpp::stop("number of columns in prob is < 2");
 
-  for (int i = 0; i < n; i++) {
-    
-    missings = false;
-
+  NumericMatrix prob_tab = Rcpp::clone(prob);
+  
+  for (int i = 0; i < prob_tab.nrow(); i++) {
+    p_tot = 0.0;
     for (int j = 0; j < k; j++) {
-      if (ISNAN(prob(i % np, j))) {
-        missings = true;
+      p_tot += prob_tab(i, j);
+      if (ISNAN(p_tot))
+        break;
+      if (prob_tab(i, j) < 0.0) {
+        p_tot = NAN;
+        throw_warning = true;
         break;
       }
     }
-    
-    if (missings) {
-      x[i] = NA_REAL;
+    prob_tab(i, 0) /= p_tot;
+    for (int j = 1; j < k; j++) {
+      prob_tab(i, j) /= p_tot;
+      prob_tab(i, j) += prob_tab(i, j-1);
+    }
+  }
+  
+  for (int i = 0; i < n; i++) {
+    if (ISNAN(GETM(prob_tab, i , 0))) {
+      x[i] = GETM(prob_tab, i, 0);
       continue;
     }
     
     u = rng_unif();
-    wrong_param = false;
-    p_tmp = 1.0;
-    jj = 0;
-    p_tot = 0.0;
+    jj = 1;
     
     for (int j = 0; j < k; j++) {
-      if (prob(i % np, j) < 0.0) {
-        wrong_param = true;
-        break;
-      }
-      p_tot += prob(i % np, j);
-    }
-    
-    for (int j = k-1; j >= 0; j--) {
-      p_tmp -= prob(i % np, j) / p_tot;
-      if (u > p_tmp) {
-        jj = j;
+      if (GETM(prob_tab, i, j) >= u) {
+        jj = j+1;
         break;
       }
     }
-
-    if (wrong_param) {
-      Rcpp::warning("NaNs produced");
-      x[i] = NAN;
-    } else {
-      x[i] = static_cast<double>(jj+1);
-    }
+    x[i] = to_dbl(jj);
   }
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
   
   return x;
 }

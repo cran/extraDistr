@@ -1,37 +1,41 @@
+
 #ifndef EDCPP_SHARED_H
 #define EDCPP_SHARED_H
 
+#include <Rcpp.h>
 
-// Basic functions
+// Constants
 
-bool tol_equal(double x, double y);
-bool isInteger(double x);
+static const double SQRT_2_PI    = 2.506628274631000241612;
+static const double PHI_0        = 0.3989422804014327028632;
+static const double MIN_DIFF_EPS = 1e-8;
 
-// Dealing with Inf and NAs
+// MACROS
 
-bool anyFinite(Rcpp::NumericVector x);
-double finite_max(Rcpp::NumericVector x);
-bool allNA(Rcpp::NumericVector x);
+#define GETV(x, i)      x[i % x.length()]    // wrapped indexing of vector
+#define GETM(x, i, j)   x(i % x.nrow(), j)   // wrapped indexing of matrix
+#define VALID_PROB(p)   ((p >= 0.0) && (p <= 1.0))
 
-// Standard normal
+// functions
 
-double phi(double x);
-double Phi(double x);
-double InvPhi(double x);
-
-// Factorial
-
-double factorial(double x);
-double lfactorial(double x);
-
-// Random generation
-
+bool isInteger(double x, bool warn = true);
+double finite_max_int(const Rcpp::NumericVector& x);
 double rng_unif();         // standard uniform
-double rng_bern(double p); // Bernoulli distribution
-double rng_sign();         // Rademacher distribution
 
-// Checking parameters
+// inline functions
 
-Rcpp::NumericMatrix normalize_prob(const Rcpp::NumericMatrix& prob);
+inline bool tol_equal(double x, double y);
+inline double phi(double x);
+inline double Phi(double x);
+inline double InvPhi(double x);
+inline double factorial(double x);
+inline double lfactorial(double x);
+inline double rng_sign();
+inline bool is_large_int(double x); 
+inline double to_dbl(int x);
+inline int to_pos_int(double x);
+
+#include "shared_inline.h"
+
 
 #endif

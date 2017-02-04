@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -8,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 /*
 Joiner, B.L., & Rosenblatt, J.R. (1971).
@@ -27,11 +22,12 @@ The Annals of Mathematical Statistics, 413-426.
 */
 
 
-double invcdf_tlambda(double p, double lambda) {
+inline double invcdf_tlambda(double p, double lambda,
+                             bool& throw_warning) {
   if (ISNAN(p) || ISNAN(lambda))
-    return NA_REAL;
-  if (p < 0.0 || p > 1.0) {
-    Rcpp::warning("NaNs produced");
+    return p+lambda;
+  if (!VALID_PROB(p)) {
+    throw_warning = true;
     return NAN;
   }
   if (lambda == 0.0)
@@ -39,30 +35,47 @@ double invcdf_tlambda(double p, double lambda) {
   return (pow(p, lambda) - pow(1.0 - p, lambda))/lambda;
 }
 
+inline double rng_tlambda(double lambda, bool& throw_warning) {
+  if (ISNAN(lambda)) {
+    throw_warning = true;
+    return NA_REAL;
+  }
+  double u = rng_unif();
+  if (lambda == 0.0)
+    return log(u) - log(1.0 - u);
+  return (pow(u, lambda) - pow(1.0 - u, lambda))/lambda;
+}
+
 
 // [[Rcpp::export]]
 NumericVector cpp_qtlambda(
     const NumericVector& p,
     const NumericVector& lambda,
-    bool lower_tail = true, bool log_prob = false
-) {
+    const bool& lower_tail = true,
+    const bool& log_prob = false
+  ) {
   
-  int n  = p.length();
-  int nl = lambda.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nl));
+  int Nmax = std::max({
+    p.length(),
+    lambda.length()
+  });
   NumericVector q(Nmax);
   NumericVector pp = Rcpp::clone(p);
   
+  bool throw_warning = false;
+  
   if (log_prob)
-    for (int i = 0; i < n; i++)
-      pp[i] = exp(pp[i]);
+    pp = exp(pp);
   
   if (!lower_tail)
-    for (int i = 0; i < n; i++)
-      pp[i] = 1.0 - pp[i];
+    pp = 1.0 - pp;
   
   for (int i = 0; i < Nmax; i++)
-    q[i] = invcdf_tlambda(pp[i % n], lambda[i % nl]);
+    q[i] = invcdf_tlambda(GETV(pp, i), GETV(lambda, i),
+                          throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return q;
 }
@@ -70,18 +83,19 @@ NumericVector cpp_qtlambda(
 
 // [[Rcpp::export]]
 NumericVector cpp_rtlambda(
-    const int n,
+    const int& n,
     const NumericVector& lambda
-) {
+  ) {
   
-  int nl = lambda.length();
   NumericVector x(n);
-  double u;
+  
+  bool throw_warning = false;
     
-  for (int i = 0; i < n; i++) {
-    u = rng_unif();
-    x[i] = invcdf_tlambda(u, lambda[i % nl]);
-  }
+  for (int i = 0; i < n; i++)
+    x[i] = rng_tlambda(GETV(lambda, i), throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
   
   return x;
 }

@@ -69,7 +69,7 @@ lines(xx, ddweibull(xx, .32, 1), col = "red")
 hist(pdweibull(x, .32, 1), 50)
 
 plot(ecdf(x))
-lines(xx, pdweibull(xx, .32, 1), col = "red", lwd = 2)
+lines(xx, pdweibull(xx, .32, 1), col = "red", lwd = 2, type = "s")
 
 }
 \references{
@@ -89,4 +89,3 @@ IEEE Transactions on Reliability, 38(3), 348-350.
 \code{\link[stats]{Weibull}}
 }
 \keyword{distribution}
-

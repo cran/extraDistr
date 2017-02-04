@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -8,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
 /*
@@ -33,53 +28,65 @@ using Rcpp::NumericMatrix;
 *
 */
 
-double pdf_kumar(double x, double a, double b) {
+inline double pdf_kumar(double x, double a, double b,
+                        bool& throw_warning) {
   if (ISNAN(x) || ISNAN(a) || ISNAN(b))
-    return NA_REAL;
+    return x+a+b;
   if (a <= 0.0 || b <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
-  if (x >= 0.0 && x <= 1.0)
-    return a*b * pow(x, a-1.0) * pow(1.0-pow(x, a), b-1.0);
-  else
+  if (x < 0.0 || x > 1.0)
     return 0.0;
+  return a*b * pow(x, a-1.0) * pow(1.0-pow(x, a), b-1.0);
 }
 
-double cdf_kumar(double x, double a, double b) {
+inline double cdf_kumar(double x, double a, double b,
+                        bool& throw_warning) {
   if (ISNAN(x) || ISNAN(a) || ISNAN(b))
-    return NA_REAL;
+    return x+a+b;
   if (a <= 0.0 || b <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
-  if (x >= 0.0 && x <= 1.0)
-    return 1.0 - pow(1.0 - pow(x, a), b);
-  else
+  if (x < 0.0)
     return 0.0;
+  if (x >= 1.0)
+    return 1.0;
+  return 1.0 - pow(1.0 - pow(x, a), b);
 }
 
-double invcdf_kumar(double p, double a, double b) {
+inline double invcdf_kumar(double p, double a, double b,
+                           bool& throw_warning) {
   if (ISNAN(p) || ISNAN(a) || ISNAN(b))
-    return NA_REAL;
-  if (a <= 0.0 || b <= 0.0 || p < 0.0 || p > 1.0) {
-    Rcpp::warning("NaNs produced");
+    return p+a+b;
+  if (a <= 0.0 || b <= 0.0 || !VALID_PROB(p)) {
+    throw_warning = true;
     return NAN;
   }
   return pow(1.0 - pow(1.0 - p, 1.0/b), 1.0/a);
 }
 
-double logpdf_kumar(double x, double a, double b) {
+inline double rng_kumar(double a, double b, bool& throw_warning) {
+  if (ISNAN(a) || ISNAN(b) || a <= 0.0 || b <= 0.0) {
+    throw_warning = true;
+    return NA_REAL;
+  }
+  double u = rng_unif();
+  return pow(1.0 - pow(u, 1.0/b), 1.0/a);
+}
+
+inline double logpdf_kumar(double x, double a, double b,
+                           bool& throw_warning) {
   if (ISNAN(x) || ISNAN(a) || ISNAN(b))
     return NA_REAL;
   if (a <= 0.0 || b <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
-  if (x >= 0.0 && x <= 1.0)
-    return log(a) + log(b) + log(x)*(a-1.0) + log(1.0 - pow(x, a))*(b-1.0);
-  else
-    return -INFINITY;
+  if (x < 0.0 || x > 1.0)
+    return R_NegInf;
+  return log(a) + log(b) + log(x)*(a-1.0) + log(1.0 - pow(x, a))*(b-1.0);
 }
 
 
@@ -88,21 +95,27 @@ NumericVector cpp_dkumar(
     const NumericVector& x,
     const NumericVector& a,
     const NumericVector& b,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
 
-  int n  = x.length();
-  int na = a.length();
-  int nb = b.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, na, nb));
+  int Nmax = std::max({
+    x.length(),
+    a.length(),
+    b.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = logpdf_kumar(x[i % n], a[i % na], b[i % nb]);
+    p[i] = pdf_kumar(GETV(x, i), GETV(a, i),
+                     GETV(b, i), throw_warning);
 
-  if (!log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = exp(p[i]);
+  if (log_prob)
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -113,26 +126,32 @@ NumericVector cpp_pkumar(
     const NumericVector& x,
     const NumericVector& a,
     const NumericVector& b,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n  = x.length();
-  int na = a.length();
-  int nb = b.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, na, nb));
+  int Nmax = std::max({
+    x.length(),
+    a.length(),
+    b.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = cdf_kumar(x[i % n], a[i % na], b[i % nb]);
+    p[i] = cdf_kumar(GETV(x, i), GETV(a, i),
+                     GETV(b, i), throw_warning);
 
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
-
+    p = 1.0 - p;
+  
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
 
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
+  
   return p;
 }
 
@@ -142,26 +161,32 @@ NumericVector cpp_qkumar(
     const NumericVector& p,
     const NumericVector& a,
     const NumericVector& b,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n  = p.length();
-  int na = a.length();
-  int nb = b.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, na, nb));
+  int Nmax = std::max({
+    p.length(),
+    a.length(),
+    b.length()
+  });
   NumericVector q(Nmax);
   NumericVector pp = Rcpp::clone(p);
+  
+  bool throw_warning = false;
 
   if (log_prob)
-    for (int i = 0; i < n; i++)
-      pp[i] = exp(pp[i]);
-
+    pp = Rcpp::exp(pp);
+  
   if (!lower_tail)
-    for (int i = 0; i < n; i++)
-      pp[i] = 1.0 - pp[i];
+    pp = 1.0 - pp;
 
   for (int i = 0; i < Nmax; i++)
-    q[i] = invcdf_kumar(pp[i % n], a[i % na], b[i % nb]);
+    q[i] = invcdf_kumar(GETV(pp, i), GETV(a, i),
+                        GETV(b, i), throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return q;
 }
@@ -169,20 +194,21 @@ NumericVector cpp_qkumar(
 
 // [[Rcpp::export]]
 NumericVector cpp_rkumar(
-    const int n,
+    const int& n,
     const NumericVector& a,
     const NumericVector& b
   ) {
 
-  double u;
-  int na = a.length();
-  int nb = b.length();
   NumericVector x(n);
+  
+  bool throw_warning = false;
 
-  for (int i = 0; i < n; i++) {
-    u = rng_unif();
-    x[i] = invcdf_kumar(u, a[i % na], b[i % nb]);
-  }
+  for (int i = 0; i < n; i++)
+    x[i] = rng_kumar(GETV(a, i), GETV(b, i),
+                     throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
 
   return x;
 }

@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -8,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
 /*
@@ -32,11 +27,11 @@ using Rcpp::NumericMatrix;
 */
 
 
-double pdf_lgser(double x, double theta) {
+double pdf_lgser(double x, double theta, bool& throw_warnin) {
   if (ISNAN(x) || ISNAN(theta))
-    return NA_REAL;
+    return x+theta;
   if (theta <= 0.0 || theta >= 1.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warnin = true;
     return NAN;
   }
   if (!isInteger(x) || x < 1.0)
@@ -46,41 +41,46 @@ double pdf_lgser(double x, double theta) {
 }
 
 
-double cdf_lgser(double x, double theta) {
+double cdf_lgser(double x, double theta, bool& throw_warnin) {
   if (ISNAN(x) || ISNAN(theta))
-    return NA_REAL;
+    return x+theta;
   if (theta <= 0.0 || theta >= 1.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warnin = true;
     return NAN;
   }
   if (x < 1.0)
     return 0.0;
-  if (std::isinf(x))
+  if (!R_FINITE(x))
     return 1.0;
+  if (is_large_int(x)) {
+    Rcpp::warning("NAs introduced by coercion to integer range");
+    return NA_REAL;
+  }
   
   double a = -1.0/log(1.0 - theta);
   double b = 0.0;
+  double dk;
+  int ix = to_pos_int(x);
   
-  for (int k = 1; k < static_cast<int>(x)+1; k++) {
-    double dk = static_cast<double>(k);
+  for (int k = 1; k <= ix; k++) {
+    dk = to_dbl(k);
     b += pow(theta, dk) / dk;
   }
   
   return a * b;
 }
 
-
-double invcdf_lgser(double p, double theta) {
+double invcdf_lgser(double p, double theta, bool& throw_warnin) {
   if (ISNAN(p) || ISNAN(theta))
-    return NA_REAL;
-  if (theta <= 0.0 || theta >= 1.0 || p < 0.0 || p > 1.0) {
-    Rcpp::warning("NaNs produced");
+    return p+theta;
+  if (theta <= 0.0 || theta >= 1.0 || !VALID_PROB(p)) {
+    throw_warnin = true;
     return NAN;
   }
   if (p == 0.0)
     return 1.0;
   if (p == 1.0)
-    return INFINITY;
+    return R_PosInf;
   
   double pk = -theta/log(1.0 - theta);
   double k = 1.0;
@@ -90,6 +90,26 @@ double invcdf_lgser(double p, double theta) {
     pk *= theta * k/(k+1.0);
     k += 1.0;
   }
+  
+  return k;
+}
+
+double rng_lgser(double theta, bool& throw_warnin) {
+  if (ISNAN(theta) || theta <= 0.0 || theta >= 1.0) {
+    throw_warnin = true;
+    return NA_REAL;
+  }
+
+  double u = rng_unif();
+  double pk = -theta/log(1.0 - theta);
+  double k = 1.0;
+  
+  while (u > pk) {
+    u -= pk;
+    pk *= theta * k/(k+1.0);
+    k += 1.0;
+  }
+  
   return k;
 }
 
@@ -98,20 +118,26 @@ double invcdf_lgser(double p, double theta) {
 NumericVector cpp_dlgser(
     const NumericVector& x,
     const NumericVector& theta,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
 
-  int n = x.length();
-  int nt = theta.length();
-  int Nmax = std::max(n, nt);
+  int Nmax = std::max({
+    x.length(),
+    theta.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_lgser(x[i % n], theta[i % nt]);
+    p[i] = pdf_lgser(GETV(x, i), GETV(theta, i),
+                     throw_warning);
  
-  if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+ if (log_prob)
+   p = Rcpp::log(p);
+ 
+ if (throw_warning)
+   Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -121,25 +147,31 @@ NumericVector cpp_dlgser(
 NumericVector cpp_plgser(
     const NumericVector& x,
     const NumericVector& theta,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n = x.length();
-  int nt = theta.length();
-  int Nmax = std::max(n, nt);
+  int Nmax = std::max({
+    x.length(),
+    theta.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = cdf_lgser(x[i % n], theta[i % nt]);
+    p[i] = cdf_lgser(GETV(x, i), GETV(theta, i),
+                     throw_warning);
 
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
-
+    p = 1.0 - p;
+  
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
 
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
+  
   return p;
 }
 
@@ -148,25 +180,31 @@ NumericVector cpp_plgser(
 NumericVector cpp_qlgser(
     const NumericVector& p,
     const NumericVector& theta,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
   
-  int n = p.length();
-  int nt = theta.length();
-  int Nmax = std::max(n, nt);
+  int Nmax = std::max({
+    p.length(),
+    theta.length()
+  });
   NumericVector x(Nmax);
   NumericVector pp = Rcpp::clone(p);
   
+  bool throw_warning = false;
+  
   if (log_prob)
-    for (int i = 0; i < n; i++)
-      pp[i] = exp(pp[i]);
+    pp = Rcpp::exp(pp);
   
   if (!lower_tail)
-    for (int i = 0; i < n; i++)
-      pp[i] = 1.0 - pp[i];
+    pp = 1.0 - pp;
   
   for (int i = 0; i < Nmax; i++)
-    x[i] = invcdf_lgser(pp[i % n], theta[i % nt]);
+    x[i] = invcdf_lgser(GETV(pp, i), GETV(theta, i),
+                        throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return x;
 }
@@ -174,17 +212,19 @@ NumericVector cpp_qlgser(
 
 // [[Rcpp::export]]
 NumericVector cpp_rlgser(
-    const int n,
+    const int& n,
     const NumericVector& theta
   ) {
 
-  int nt = theta.length();
   NumericVector x(n);
+  
+  bool throw_warning = false;
 
-  for (int i = 0; i < n; i++) {
-    double u = rng_unif();
-    x[i] = invcdf_lgser(u, theta[i % nt]);
-  }
+  for (int i = 0; i < n; i++)
+    x[i] = rng_lgser(GETV(theta, i), throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
 
   return x;
 }

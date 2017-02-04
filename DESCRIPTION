@@ -1,8 +1,8 @@
 Package: extraDistr
 Type: Package
 Title: Additional Univariate and Multivariate Distributions
-Version: 1.8.2
-Date: 2016-10-10
+Version: 1.8.3
+Date: 2017-02-04
 Author: Tymoteusz Wolodzko
 Maintainer: Tymoteusz Wolodzko <twolodzko+extraDistr@gmail.com>
 Description: Density, distribution function, quantile function
@@ -11,15 +11,16 @@ Description: Density, distribution function, quantile function
     following distributions: Bernoulli, beta-binomial, beta-negative
     binomial, beta prime, Bhattacharjee, Birnbaum-Saunders,
     bivariate normal, bivariate Poisson, categorical, Dirichlet,
-    Dirichlet-multinomial, discrete Laplace, discrete normal,
-    discrete uniform, discrete Weibull, Frechet, gamma-Poisson,
-    generalized extreme value, Gompertz, generalized Pareto,
-    Gumbel, half-Cauchy, half-normal, half-t, Huber density, 
-    inverse chi-squared, inverse-gamma, Kumaraswamy, Laplace,
-    logarithmic, Lomax, multivariate hypergeometric, multinomial,
-    non-standard t, non-standard beta, normal mixture,
-    Poisson mixture, Pareto, power, reparametrized beta,
-    Rayleigh, Skellam, slash, triangular, truncated normal,
+    Dirichlet-multinomial, discrete gamma, discrete Laplace,
+    discrete normal, discrete uniform, discrete Weibull, Frechet,
+    gamma-Poisson, generalized extreme value, Gompertz,
+    generalized Pareto, Gumbel, half-Cauchy, half-normal, half-t,
+    Huber density, inverse chi-squared, inverse-gamma, Kumaraswamy,
+    Laplace, logarithmic, Lomax, multivariate hypergeometric,
+    multinomial, negative hypergeometric, non-standard t,
+    non-standard beta, normal mixture, Poisson mixture, Pareto,
+    power, reparametrized beta, Rayleigh, shifted Gompertz, Skellam,
+    slash, triangular, truncated binomial, truncated normal,
     truncated Poisson, Tukey lambda, Wald, zero-inflated binomial,
     zero-inflated negative binomial, zero-inflated Poisson.
 License: GPL-2
@@ -29,8 +30,9 @@ LazyData: TRUE
 LinkingTo: Rcpp
 Imports: Rcpp
 Suggests: testthat
-RoxygenNote: 5.0.1
+SystemRequirements: C++11
+RoxygenNote: 6.0.0
 NeedsCompilation: yes
-Packaged: 2016-10-10 05:53:27 UTC; tymek
+Packaged: 2017-02-04 17:26:31 UTC; tymek
 Repository: CRAN
-Date/Publication: 2016-10-10 08:28:35
+Date/Publication: 2017-02-04 22:37:24

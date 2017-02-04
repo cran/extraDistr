@@ -20,7 +20,7 @@
 #' \deqn{
 #' f(x) = \sqrt{\frac{\lambda}{2\pi x^3}} \exp\left( \frac{-\lambda(x-\mu)^2}{2\mu^2 x} \right)
 #' }{
-#' f(x) = sqrt(\lambda/(2*pi*x^3)) * exp((-\lambda*(x-\mu)^2)/(2*\mu^2*x))
+#' f(x) = sqrt(\lambda/(2*\pi*x^3)) * exp((-\lambda*(x-\mu)^2)/(2*\mu^2*x))
 #' }
 #'
 #' Cumulative distribution function
@@ -32,6 +32,14 @@
 #' F(x) = \Phi(sqrt(\lambda/\mu)*(x/\mu-1)) - exp((2*\lambda)/\mu) *
 #' \Phi(sqrt(\lambda/\mu)*(x/\mu+1))
 #' }
+#' 
+#' Random generation is done using the algorithm described by Michael, Schucany and Haas (1976).
+#' 
+#' @references 
+#' 
+#' Michael, J.R., Schucany, W.R., and Haas, R.W. (1976).
+#' Generating Random Variates Using Transformations with Multiple Roots.
+#' The American Statistician, 30(2): 88-90.
 #' 
 #' @examples 
 #' 

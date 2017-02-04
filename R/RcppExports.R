@@ -133,16 +133,20 @@ cpp_rdirmnom <- function(n, size, alpha) {
     .Call('extraDistr_cpp_rdirmnom', PACKAGE = 'extraDistr', n, size, alpha)
 }
 
-cpp_ddlaplace <- function(x, scale, location, log_prob = FALSE) {
-    .Call('extraDistr_cpp_ddlaplace', PACKAGE = 'extraDistr', x, scale, location, log_prob)
+cpp_ddgamma <- function(x, shape, scale, log_prob = FALSE) {
+    .Call('extraDistr_cpp_ddgamma', PACKAGE = 'extraDistr', x, shape, scale, log_prob)
 }
 
-cpp_pdlaplace <- function(x, scale, location, lower_tail = TRUE, log_prob = FALSE) {
-    .Call('extraDistr_cpp_pdlaplace', PACKAGE = 'extraDistr', x, scale, location, lower_tail, log_prob)
+cpp_ddlaplace <- function(x, location, scale, log_prob = FALSE) {
+    .Call('extraDistr_cpp_ddlaplace', PACKAGE = 'extraDistr', x, location, scale, log_prob)
 }
 
-cpp_rdlaplace <- function(n, scale, location) {
-    .Call('extraDistr_cpp_rdlaplace', PACKAGE = 'extraDistr', n, scale, location)
+cpp_pdlaplace <- function(x, location, scale, lower_tail = TRUE, log_prob = FALSE) {
+    .Call('extraDistr_cpp_pdlaplace', PACKAGE = 'extraDistr', x, location, scale, lower_tail, log_prob)
+}
+
+cpp_rdlaplace <- function(n, location, scale) {
+    .Call('extraDistr_cpp_rdlaplace', PACKAGE = 'extraDistr', n, location, scale)
 }
 
 cpp_ddnorm <- function(x, mu, sigma, log_prob = FALSE) {
@@ -445,6 +449,22 @@ cpp_rmvhyper <- function(nn, n, k) {
     .Call('extraDistr_cpp_rmvhyper', PACKAGE = 'extraDistr', nn, n, k)
 }
 
+cpp_dnhyper <- function(x, n, m, r, log_prob = FALSE) {
+    .Call('extraDistr_cpp_dnhyper', PACKAGE = 'extraDistr', x, n, m, r, log_prob)
+}
+
+cpp_pnhyper <- function(x, n, m, r, lower_tail = TRUE, log_prob = FALSE) {
+    .Call('extraDistr_cpp_pnhyper', PACKAGE = 'extraDistr', x, n, m, r, lower_tail, log_prob)
+}
+
+cpp_qnhyper <- function(p, n, m, r, lower_tail = TRUE, log_prob = FALSE) {
+    .Call('extraDistr_cpp_qnhyper', PACKAGE = 'extraDistr', p, n, m, r, lower_tail, log_prob)
+}
+
+cpp_rnhyper <- function(nn, n, m, r) {
+    .Call('extraDistr_cpp_rnhyper', PACKAGE = 'extraDistr', nn, n, m, r)
+}
+
 cpp_dnst <- function(x, nu, mu, sigma, log_prob = FALSE) {
     .Call('extraDistr_cpp_dnst', PACKAGE = 'extraDistr', x, nu, mu, sigma, log_prob)
 }
@@ -525,6 +545,10 @@ cpp_rprop <- function(n, size, mean) {
     .Call('extraDistr_cpp_rprop', PACKAGE = 'extraDistr', n, size, mean)
 }
 
+cpp_rsign <- function(n) {
+    .Call('extraDistr_cpp_rsign', PACKAGE = 'extraDistr', n)
+}
+
 cpp_drayleigh <- function(x, sigma, log_prob = FALSE) {
     .Call('extraDistr_cpp_drayleigh', PACKAGE = 'extraDistr', x, sigma, log_prob)
 }
@@ -539,6 +563,18 @@ cpp_qrayleigh <- function(p, sigma, lower_tail = TRUE, log_prob = FALSE) {
 
 cpp_rrayleigh <- function(n, sigma) {
     .Call('extraDistr_cpp_rrayleigh', PACKAGE = 'extraDistr', n, sigma)
+}
+
+cpp_dsgomp <- function(x, b, eta, log_prob = FALSE) {
+    .Call('extraDistr_cpp_dsgomp', PACKAGE = 'extraDistr', x, b, eta, log_prob)
+}
+
+cpp_psgomp <- function(x, b, eta, lower_tail = TRUE, log_prob = FALSE) {
+    .Call('extraDistr_cpp_psgomp', PACKAGE = 'extraDistr', x, b, eta, lower_tail, log_prob)
+}
+
+cpp_rsgomp <- function(n, b, eta) {
+    .Call('extraDistr_cpp_rsgomp', PACKAGE = 'extraDistr', n, b, eta)
 }
 
 cpp_dskellam <- function(x, mu1, mu2, log_prob = FALSE) {
@@ -577,36 +613,52 @@ cpp_rtriang <- function(n, a, b, c) {
     .Call('extraDistr_cpp_rtriang', PACKAGE = 'extraDistr', n, a, b, c)
 }
 
-cpp_dtnorm <- function(x, mu, sigma, a, b, log_prob = FALSE) {
-    .Call('extraDistr_cpp_dtnorm', PACKAGE = 'extraDistr', x, mu, sigma, a, b, log_prob)
+cpp_dtbinom <- function(x, size, prob, lower, upper, log_prob = FALSE) {
+    .Call('extraDistr_cpp_dtbinom', PACKAGE = 'extraDistr', x, size, prob, lower, upper, log_prob)
 }
 
-cpp_ptnorm <- function(x, mu, sigma, a, b, lower_tail = TRUE, log_prob = FALSE) {
-    .Call('extraDistr_cpp_ptnorm', PACKAGE = 'extraDistr', x, mu, sigma, a, b, lower_tail, log_prob)
+cpp_ptbinom <- function(x, size, prob, lower, upper, lower_tail = TRUE, log_prob = FALSE) {
+    .Call('extraDistr_cpp_ptbinom', PACKAGE = 'extraDistr', x, size, prob, lower, upper, lower_tail, log_prob)
 }
 
-cpp_qtnorm <- function(p, mu, sigma, a, b, lower_tail = TRUE, log_prob = FALSE) {
-    .Call('extraDistr_cpp_qtnorm', PACKAGE = 'extraDistr', p, mu, sigma, a, b, lower_tail, log_prob)
+cpp_qtbinom <- function(p, size, prob, lower, upper, lower_tail = TRUE, log_prob = FALSE) {
+    .Call('extraDistr_cpp_qtbinom', PACKAGE = 'extraDistr', p, size, prob, lower, upper, lower_tail, log_prob)
 }
 
-cpp_rtnorm <- function(n, mu, sigma, a, b) {
-    .Call('extraDistr_cpp_rtnorm', PACKAGE = 'extraDistr', n, mu, sigma, a, b)
+cpp_rtbinom <- function(n, size, prob, lower, upper) {
+    .Call('extraDistr_cpp_rtbinom', PACKAGE = 'extraDistr', n, size, prob, lower, upper)
 }
 
-cpp_dtpois <- function(x, lambda, s, log_prob = FALSE) {
-    .Call('extraDistr_cpp_dtpois', PACKAGE = 'extraDistr', x, lambda, s, log_prob)
+cpp_dtnorm <- function(x, mu, sigma, lower, upper, log_prob = FALSE) {
+    .Call('extraDistr_cpp_dtnorm', PACKAGE = 'extraDistr', x, mu, sigma, lower, upper, log_prob)
 }
 
-cpp_ptpois <- function(x, lambda, s, lower_tail = TRUE, log_prob = FALSE) {
-    .Call('extraDistr_cpp_ptpois', PACKAGE = 'extraDistr', x, lambda, s, lower_tail, log_prob)
+cpp_ptnorm <- function(x, mu, sigma, lower, upper, lower_tail = TRUE, log_prob = FALSE) {
+    .Call('extraDistr_cpp_ptnorm', PACKAGE = 'extraDistr', x, mu, sigma, lower, upper, lower_tail, log_prob)
 }
 
-cpp_qtpois <- function(p, lambda, s, lower_tail = TRUE, log_prob = FALSE) {
-    .Call('extraDistr_cpp_qtpois', PACKAGE = 'extraDistr', p, lambda, s, lower_tail, log_prob)
+cpp_qtnorm <- function(p, mu, sigma, lower, upper, lower_tail = TRUE, log_prob = FALSE) {
+    .Call('extraDistr_cpp_qtnorm', PACKAGE = 'extraDistr', p, mu, sigma, lower, upper, lower_tail, log_prob)
 }
 
-cpp_rtpois <- function(n, lambda, s) {
-    .Call('extraDistr_cpp_rtpois', PACKAGE = 'extraDistr', n, lambda, s)
+cpp_rtnorm <- function(n, mu, sigma, lower, upper) {
+    .Call('extraDistr_cpp_rtnorm', PACKAGE = 'extraDistr', n, mu, sigma, lower, upper)
+}
+
+cpp_dtpois <- function(x, lambda, lower, upper, log_prob = FALSE) {
+    .Call('extraDistr_cpp_dtpois', PACKAGE = 'extraDistr', x, lambda, lower, upper, log_prob)
+}
+
+cpp_ptpois <- function(x, lambda, lower, upper, lower_tail = TRUE, log_prob = FALSE) {
+    .Call('extraDistr_cpp_ptpois', PACKAGE = 'extraDistr', x, lambda, lower, upper, lower_tail, log_prob)
+}
+
+cpp_qtpois <- function(p, lambda, lower, upper, lower_tail = TRUE, log_prob = FALSE) {
+    .Call('extraDistr_cpp_qtpois', PACKAGE = 'extraDistr', p, lambda, lower, upper, lower_tail, log_prob)
+}
+
+cpp_rtpois <- function(n, lambda, lower, upper) {
+    .Call('extraDistr_cpp_rtpois', PACKAGE = 'extraDistr', n, lambda, lower, upper)
 }
 
 cpp_qtlambda <- function(p, lambda, lower_tail = TRUE, log_prob = FALSE) {

@@ -4,15 +4,12 @@
 \alias{DiscreteNormal}
 \alias{ddnorm}
 \alias{pdnorm}
-\alias{qdnorm}
 \alias{rdnorm}
 \title{Discrete normal distribution}
 \usage{
 ddnorm(x, mean = 0, sd = 1, log = FALSE)
 
 pdnorm(q, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
-
-qdnorm(p, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE)
 
 rdnorm(n, mean = 0, sd = 1)
 }
@@ -27,8 +24,6 @@ rdnorm(n, mean = 0, sd = 1)
 
 \item{lower.tail}{logical; if TRUE (default), probabilities are \eqn{P[X \le x]}
 otherwise, \eqn{P[X > x]}.}
-
-\item{p}{vector of probabilities.}
 
 \item{n}{number of observations. If \code{length(n) > 1},
 the length is taken to be the number required.}
@@ -45,16 +40,25 @@ f(x) = \Phi\left(\frac{x-\mu+1}{\sigma}\right) - \Phi\left(\frac{x-\mu}{\sigma}\
 }{
 f(x) = \Phi((x-\mu+1)/\sigma) - \Phi((x-\mu)/\sigma)
 }
+
+Cumulative distribution function
+
+\deqn{
+F(x) = \Phi\left(\frac{\lfloor x \rfloor + 1 - \mu}{\sigma}\right)
+}{
+F(x) = \Phi((floor(x)+1-\mu)/\sigma)
+}
 }
 \examples{
 
-x <- rdnorm(1e5, 7, 35)
-xx <- -150:150
-hist(x, 100, freq = FALSE)
-lines(xx-0.5, ddnorm(xx, 7, 35), col = "red")
-hist(pdnorm(x, 7, 35))
+x <- rdnorm(1e5, 0, 3)
+xx <- -15:15
+plot(prop.table(table(x)))
+lines(xx, ddnorm(xx, 0, 3), col = "red")
+hist(pdnorm(x, 0, 3))
 plot(ecdf(x))
-lines(xx, pdnorm(xx, 7, 35), col = "red", lwd = 2)
+xx <- seq(-15, 15, 0.1)
+lines(xx, pdnorm(xx, 0, 3), col = "red", lwd = 2, type = "s")
 
 }
 \references{
@@ -65,4 +69,3 @@ Communications in Statistics-Theory and Methods, 32, 1871-1883.
 \code{\link[stats]{Normal}}
 }
 \keyword{distribution}
-

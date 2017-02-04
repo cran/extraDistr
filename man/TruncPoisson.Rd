@@ -8,22 +8,20 @@
 \alias{rtpois}
 \title{Truncated Poisson distribution}
 \usage{
-dtpois(x, lambda, s = 0, log = FALSE)
+dtpois(x, lambda, a = -Inf, b = Inf, log = FALSE)
 
-ptpois(q, lambda, s = 0, lower.tail = TRUE, log.p = FALSE)
+ptpois(q, lambda, a = -Inf, b = Inf, lower.tail = TRUE, log.p = FALSE)
 
-qtpois(p, lambda, s = 0, lower.tail = TRUE, log.p = FALSE)
+qtpois(p, lambda, a = -Inf, b = Inf, lower.tail = TRUE, log.p = FALSE)
 
-rtpois(n, lambda, s = 0)
+rtpois(n, lambda, a = -Inf, b = Inf)
 }
 \arguments{
 \item{x, q}{vector of quantiles.}
 
 \item{lambda}{vector of (non-negative) means.}
 
-\item{s}{truncation point (non-negtive); \code{s=0} (default)
-for zero-truncated Poisson, otherwise values greater
-than \code{s} are truncated.}
+\item{a, b}{lower and upper truncation points (\code{a < x <= b}).}
 
 \item{log, log.p}{logical; if TRUE, probabilities p are given as log(p).}
 
@@ -42,14 +40,17 @@ for the truncated Poisson distribution.
 \examples{
 
 x <- rtpois(1e5, 14, 16)
-xx <- seq(-1, 20)
+xx <- seq(-1, 50)
 plot(prop.table(table(x)))
 lines(xx, dtpois(xx, 14, 16), col = "red")
 hist(ptpois(x, 14, 16))
+
+xx <- seq(0, 50, by = 0.01)
 plot(ecdf(x))
 lines(xx, ptpois(xx, 14, 16), col = "red", lwd = 2)
+
 uu <- seq(0, 1, by = 0.001)
-lines(qtpois(uu, 14, 16), uu, col = "blue")
+lines(qtpois(uu, 14, 16), uu, col = "blue", lty = 2)
 
 # Zero-truncated Poisson
 
@@ -58,9 +59,11 @@ xx <- seq(-1, 50)
 plot(prop.table(table(x)))
 lines(xx, dtpois(xx, 5, 0), col = "red")
 hist(ptpois(x, 5, 0))
+
+xx <- seq(0, 50, by = 0.01)
 plot(ecdf(x))
 lines(xx, ptpois(xx, 5, 0), col = "red", lwd = 2)
-lines(qtpois(uu, 5, 0), uu, col = "blue")
+lines(qtpois(uu, 5, 0), uu, col = "blue", lty = 2)
 
 }
 \references{
@@ -76,4 +79,3 @@ R-help mailing list.
 \url{https://stat.ethz.ch/pipermail/r-help/2005-May/070680.html}
 }
 \keyword{distribution}
-

@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -8,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
 /*
@@ -32,26 +27,28 @@ using Rcpp::NumericMatrix;
  *  F(x)    = { 1/2 * exp(z)                 if   x < mu
  *            { 1 - 1/2 * exp(z)             otherwise
  *  F^-1(p) = { mu + sigma * log(2*p)        if p <= 0.5
- *            { mu + sigma * log(2*(1-p))    otherwise
+ *            { mu - sigma * log(2*(1-p))    otherwise
  *
  */
 
-double pdf_laplace(double x, double mu, double sigma) {
+inline double pdf_laplace(double x, double mu, double sigma,
+                          bool& throw_warning) {
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma))
-    return NA_REAL;
+    return x+mu+sigma;
   if (sigma <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   double z = abs(x-mu)/sigma;
   return exp(-z)/(2.0*sigma);
 }
 
-double cdf_laplace(double x, double mu, double sigma) {
+inline double cdf_laplace(double x, double mu, double sigma,
+                          bool& throw_warning) {
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma))
-    return NA_REAL;
+    return x+mu+sigma;
   if (sigma <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   double z = (x-mu)/sigma;
@@ -61,11 +58,12 @@ double cdf_laplace(double x, double mu, double sigma) {
     return 1.0 - exp(-z)/2.0;
 }
 
-double invcdf_laplace(double p, double mu, double sigma) {
+inline double invcdf_laplace(double p, double mu, double sigma,
+                             bool& throw_warning) {
   if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma))
-    return NA_REAL;
-  if (sigma <= 0.0 || p < 0.0 || p > 1.0) {
-    Rcpp::warning("NaNs produced");
+    return p+mu+sigma;
+  if (sigma <= 0.0 || !VALID_PROB(p)) {
+    throw_warning = true;
     return NAN;
   }
   if (p < 0.5)
@@ -74,12 +72,10 @@ double invcdf_laplace(double p, double mu, double sigma) {
     return mu - sigma * log(2.0*(1.0-p));
 }
 
-double rng_laplace(double mu, double sigma) {
-  if (ISNAN(mu) || ISNAN(sigma))
+inline double rng_laplace(double mu, double sigma, bool& throw_warning) {
+  if (ISNAN(mu) || ISNAN(sigma) || sigma <= 0.0) {
+    throw_warning = true;
     return NA_REAL;
-  if (sigma <= 0.0) {
-    Rcpp::warning("NaNs produced");
-    return NAN;
   }
   // this is slower
   // double u = R::runif(-0.5, 0.5);
@@ -95,21 +91,27 @@ NumericVector cpp_dlaplace(
     const NumericVector& x,
     const NumericVector& mu,
     const NumericVector& sigma,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
 
-  int n  = x.length();
-  int nm = mu.length();
-  int ns = sigma.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nm, ns));
+  int Nmax = std::max({
+    x.length(),
+    mu.length(),
+    sigma.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_laplace(x[i % n], mu[i % nm], sigma[i % ns]);
+    p[i] = pdf_laplace(GETV(x, i), GETV(mu, i),
+                       GETV(sigma, i), throw_warning);
 
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -120,25 +122,31 @@ NumericVector cpp_plaplace(
     const NumericVector& x,
     const NumericVector& mu,
     const NumericVector& sigma,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n  = x.length();
-  int nm = mu.length();
-  int ns = sigma.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nm, ns));
+  int Nmax = std::max({
+    x.length(),
+    mu.length(),
+    sigma.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = cdf_laplace(x[i % n], mu[i % nm], sigma[i % ns]);
+    p[i] = cdf_laplace(GETV(x, i), GETV(mu, i),
+                       GETV(sigma, i), throw_warning);
 
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
-
+    p = 1.0 - p;
+  
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -149,26 +157,32 @@ NumericVector cpp_qlaplace(
     const NumericVector& p,
     const NumericVector& mu,
     const NumericVector& sigma,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n  = p.length();
-  int nm = mu.length();
-  int ns = sigma.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nm, ns));
+  int Nmax = std::max({
+    p.length(),
+    mu.length(),
+    sigma.length()
+  });
   NumericVector q(Nmax);
   NumericVector pp = Rcpp::clone(p);
+  
+  bool throw_warning = false;
 
   if (log_prob)
-    for (int i = 0; i < n; i++)
-      pp[i] = exp(pp[i]);
-
+    pp = Rcpp::exp(pp);
+  
   if (!lower_tail)
-    for (int i = 0; i < n; i++)
-      pp[i] = 1.0 - pp[i];
+    pp = 1.0 - pp;
 
   for (int i = 0; i < Nmax; i++)
-    q[i] = invcdf_laplace(pp[i % n], mu[i % nm], sigma[i % ns]);
+    q[i] = invcdf_laplace(GETV(pp, i), GETV(mu, i),
+                          GETV(sigma, i), throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return q;
 }
@@ -176,17 +190,21 @@ NumericVector cpp_qlaplace(
 
 // [[Rcpp::export]]
 NumericVector cpp_rlaplace(
-    const int n,
+    const int& n,
     const NumericVector& mu,
     const NumericVector& sigma
   ) {
 
-  int nm = mu.length();
-  int ns = sigma.length();
   NumericVector x(n);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < n; i++)
-    x[i] = rng_laplace(mu[i % nm], sigma[i % ns]);
+    x[i] = rng_laplace(GETV(mu, i), GETV(sigma, i),
+                       throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
 
   return x;
 }

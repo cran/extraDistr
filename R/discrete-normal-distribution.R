@@ -6,7 +6,6 @@
 #' for discrete normal distribution.
 #'
 #' @param x,q	            vector of quantiles.
-#' @param p	              vector of probabilities.
 #' @param n	              number of observations. If \code{length(n) > 1},
 #'                        the length is taken to be the number required.
 #' @param mean            vector of means.
@@ -24,6 +23,14 @@
 #' f(x) = \Phi((x-\mu+1)/\sigma) - \Phi((x-\mu)/\sigma)
 #' }
 #' 
+#' Cumulative distribution function
+#' 
+#' \deqn{
+#' F(x) = \Phi\left(\frac{\lfloor x \rfloor + 1 - \mu}{\sigma}\right)
+#' }{
+#' F(x) = \Phi((floor(x)+1-\mu)/\sigma)
+#' }
+#' 
 #' @references 
 #' Roy, D. (2003). The discrete normal distribution.
 #' Communications in Statistics-Theory and Methods, 32, 1871-1883.
@@ -32,13 +39,14 @@
 #' 
 #' @examples 
 #' 
-#' x <- rdnorm(1e5, 7, 35)
-#' xx <- -150:150
-#' hist(x, 100, freq = FALSE)
-#' lines(xx-0.5, ddnorm(xx, 7, 35), col = "red")
-#' hist(pdnorm(x, 7, 35))
+#' x <- rdnorm(1e5, 0, 3)
+#' xx <- -15:15
+#' plot(prop.table(table(x)))
+#' lines(xx, ddnorm(xx, 0, 3), col = "red")
+#' hist(pdnorm(x, 0, 3))
 #' plot(ecdf(x))
-#' lines(xx, pdnorm(xx, 7, 35), col = "red", lwd = 2)
+#' xx <- seq(-15, 15, 0.1)
+#' lines(xx, pdnorm(xx, 0, 3), col = "red", lwd = 2, type = "s")
 #' 
 #' @name DiscreteNormal
 #' @aliases DiscreteNormal
@@ -56,15 +64,7 @@ ddnorm <- function(x, mean = 0, sd = 1, log = FALSE) {
 #' @export
 
 pdnorm <- function(q, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE) {
-  pnorm(q, mean, sd, lower.tail, log.p)
-}
-
-
-#' @rdname DiscreteNormal
-#' @export
-
-qdnorm <- function(p, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE) {
-  ceiling(qnorm(p, mean, sd, lower.tail, log.p))
+  pnorm(floor(q)+1, mean, sd, lower.tail, log.p)
 }
 
 
@@ -72,6 +72,6 @@ qdnorm <- function(p, mean = 0, sd = 1, lower.tail = TRUE, log.p = FALSE) {
 #' @export
 
 rdnorm <- function(n, mean = 0, sd = 1) {
-  ceiling(rnorm(n, mean, sd))
+  floor(rnorm(n, mean, sd))
 }
 

@@ -56,6 +56,10 @@ test_that("Missing values in PDF and PMF functions", {
   expect_true(is.na(ddnorm(1, NA, 1)))
   expect_true(is.na(ddnorm(1, 1, NA)))
   
+  expect_true(is.na(ddgamma(NA, 9, 1)))
+  expect_true(is.na(ddgamma(1, NA, 1)))
+  expect_true(is.na(ddgamma(1, 9, NA)))
+  
   expect_true(is.na(ddunif(NA, 1, 10)))
   expect_true(is.na(ddunif(1, NA, 10)))
   expect_true(is.na(ddunif(1, 1, NA)))
@@ -151,6 +155,11 @@ test_that("Missing values in PDF and PMF functions", {
   expect_true(is.na(dmixpois(0, c(1,2,3), c(1/3,NA,1/3))))
   expect_true(is.na(dmixpois(0, c(1,2,3), c(1/3,1/3,NA))))
 
+  expect_true(is.na(dnhyper(NA, 60, 35, 15)))
+  expect_true(is.na(dnhyper(1, NA, 35, 15)))
+  expect_true(is.na(dnhyper(1, 60, NA, 15)))
+  expect_true(is.na(dnhyper(1, 60, 35, NA)))
+  
   expect_true(is.na(ddirmnom(c(NA, 1, 1), 3, c(1, 1, 1))))
   expect_true(is.na(ddirmnom(c(1, NA, 1), 3, c(1, 1, 1))))
   expect_true(is.na(ddirmnom(c(1, 1, NA), 3, c(1, 1, 1))))
@@ -200,6 +209,10 @@ test_that("Missing values in PDF and PMF functions", {
   expect_true(is.na(dskellam(NA, 1, 1)))
   expect_true(is.na(dskellam(1, NA, 1)))
   expect_true(is.na(dskellam(1, 1, NA)))
+  
+  expect_true(is.na(dsgomp(NA, 0.4, 1)))
+  expect_true(is.na(dsgomp(1, NA, 1)))
+  expect_true(is.na(dsgomp(1, 0.4, NA)))
 
   expect_true(is.na(dslash(NA, 1, 1)))
   expect_true(is.na(dslash(1, NA, 1)))
@@ -280,6 +293,10 @@ test_that("Wrong parameter values in CDF functions", {
   expect_true(is.na(pdnorm(NA, 1, 1)))
   expect_true(is.na(pdnorm(1, NA, 1)))
   expect_true(is.na(pdnorm(1, 1, NA)))
+  
+  expect_true(is.na(pdgamma(NA, 9, 1)))
+  expect_true(is.na(pdgamma(1, NA, 1)))
+  expect_true(is.na(pdgamma(1, 9, NA)))
   
   expect_true(is.na(pdunif(NA, 1, 10)))
   expect_true(is.na(pdunif(1, NA, 10)))
@@ -376,6 +393,11 @@ test_that("Wrong parameter values in CDF functions", {
   expect_true(is.na(pmixpois(0, c(1,2,3), c(1/3,NA,1/3))))
   expect_true(is.na(pmixpois(0, c(1,2,3), c(1/3,1/3,NA))))
 
+  expect_true(is.na(pnhyper(NA, 60, 35, 15)))
+  expect_true(is.na(pnhyper(1, NA, 35, 15)))
+  expect_true(is.na(pnhyper(1, 60, NA, 15)))
+  expect_true(is.na(pnhyper(1, 60, 35, NA)))
+  
   expect_true(is.na(pnsbeta(NA, 1, 1, -2, 2)))
   expect_true(is.na(pnsbeta(0.5, NA, 1, -2, 2)))
   expect_true(is.na(pnsbeta(0.5, 1, NA, -2, 2)))
@@ -397,6 +419,10 @@ test_that("Wrong parameter values in CDF functions", {
   
   expect_true(is.na(prayleigh(NA, 1)))
   expect_true(is.na(prayleigh(1, NA)))
+  
+  expect_true(is.na(psgomp(NA, 0.4, 1)))
+  expect_true(is.na(psgomp(1, NA, 1)))
+  expect_true(is.na(psgomp(1, 0.4, NA)))
 
   expect_true(is.na(pslash(NA, 1, 1)))
   expect_true(is.na(pslash(1, NA, 1)))
@@ -453,11 +479,7 @@ test_that("Wrong parameter values in inverse CDF functions", {
   expect_true(is.na(qcat(NA, c(0.5, 0.5))))
   expect_true(is.na(qcat(0.5, c(NA, 0.5))))
   expect_true(is.na(qcat(0.5, c(0.5, NA))))
-  
-  expect_true(is.na(qdnorm(NA, 1, 1)))
-  expect_true(is.na(qdnorm(0.5, NA, 1)))
-  expect_true(is.na(qdnorm(0.5, 1, NA)))
-  
+
   expect_true(is.na(qdunif(NA, 1, 10)))
   expect_true(is.na(qdunif(0.5, NA, 10)))
   expect_true(is.na(qdunif(0.5, 1, NA)))
@@ -531,6 +553,11 @@ test_that("Wrong parameter values in inverse CDF functions", {
   expect_true(is.na(qlomax(0.5, NA, 1)))
   expect_true(is.na(qlomax(0.5, 1, NA)))
 
+  expect_true(is.na(qnhyper(NA, 60, 35, 15)))
+  expect_true(is.na(qnhyper(0.5, NA, 35, 15)))
+  expect_true(is.na(qnhyper(0.5, 60, NA, 15)))
+  expect_true(is.na(qnhyper(0.5, 60, 35, NA)))
+  
   expect_true(is.na(qnsbeta(NA, 1, 1, -2, 2)))
   expect_true(is.na(qnsbeta(0.5, NA, 1, -2, 2)))
   expect_true(is.na(qnsbeta(0.5, 1, NA, -2, 2)))
@@ -552,6 +579,9 @@ test_that("Wrong parameter values in inverse CDF functions", {
   
   expect_true(is.na(qrayleigh(NA, 1)))
   expect_true(is.na(qrayleigh(0.5, NA)))
+  
+  expect_true(is.na(qtlambda(NA, 0.5)))
+  expect_true(is.na(qtlambda(0, NA)))
 
   expect_true(is.na(qtnorm(NA, 0, 1, -2, 2)))
   expect_true(is.na(qtnorm(0.5, NA, 1, -2, 2)))
@@ -589,182 +619,194 @@ test_that("Wrong parameter values in inverse CDF functions", {
 
 test_that("Wrong parameter values in RNG functions", {
 
-  expect_true(is.na(rbbinom(1, NA, 1, 1)))
-  expect_true(is.na(rbbinom(1, 1, NA, 1)))
-  expect_true(is.na(rbbinom(1, 1, 1, NA)))
+  expect_warning(expect_true(is.na(rbbinom(1, NA, 1, 1))))
+  expect_warning(expect_true(is.na(rbbinom(1, 1, NA, 1))))
+  expect_warning(expect_true(is.na(rbbinom(1, 1, 1, NA))))
 
-  expect_true(is.na(rbern(1, NA)))
+  expect_warning(expect_true(is.na(rbern(1, NA))))
   
-  expect_true(is.na(rbetapr(1, NA, 1, 1)))
-  expect_true(is.na(rbetapr(1, 1, NA, 1)))
-  expect_true(is.na(rbetapr(1, 1, 1, NA)))
+  expect_warning(expect_true(is.na(rbetapr(1, NA, 1, 1))))
+  expect_warning(expect_true(is.na(rbetapr(1, 1, NA, 1))))
+  expect_warning(expect_true(is.na(rbetapr(1, 1, 1, NA))))
 
-  expect_true(is.na(rbhatt(1, NA, 1, 1)))
-  expect_true(is.na(rbhatt(1, 1, NA, 1)))
-  expect_true(is.na(rbhatt(1, 1, 1, NA)))
+  expect_warning(expect_true(is.na(rbhatt(1, NA, 1, 1))))
+  expect_warning(expect_true(is.na(rbhatt(1, 1, NA, 1))))
+  expect_warning(expect_true(is.na(rbhatt(1, 1, 1, NA))))
 
-  expect_true(is.na(rbnbinom(1, NA, 1, 1)))
-  expect_true(is.na(rbnbinom(1, 1, NA, 1)))
-  expect_true(is.na(rbnbinom(1, 1, 1, NA)))
+  expect_warning(expect_true(is.na(rbnbinom(1, NA, 1, 1))))
+  expect_warning(expect_true(is.na(rbnbinom(1, 1, NA, 1))))
+  expect_warning(expect_true(is.na(rbnbinom(1, 1, 1, NA))))
 
-  expect_true(all(is.na(rbvnorm(1, NA, 1, 1, 1, 0.5))))
-  expect_true(all(is.na(rbvnorm(1, 1, NA, 1, 1, 0.5))))
-  expect_true(all(is.na(rbvnorm(1, 1, 1, NA, 1, 0.5))))
-  expect_true(all(is.na(rbvnorm(1, 1, 1, 1, NA, 0.5))))
-  expect_true(all(is.na(rbvnorm(1, 1, 1, 1, 1, NA))))
+  expect_warning(expect_true(all(is.na(rbvnorm(1, NA, 1, 1, 1, 0.5)))))
+  expect_warning(expect_true(all(is.na(rbvnorm(1, 1, NA, 1, 1, 0.5)))))
+  expect_warning(expect_true(all(is.na(rbvnorm(1, 1, 1, NA, 1, 0.5)))))
+  expect_warning(expect_true(all(is.na(rbvnorm(1, 1, 1, 1, NA, 0.5)))))
+  expect_warning(expect_true(all(is.na(rbvnorm(1, 1, 1, 1, 1, NA)))))
   
-  expect_true(all(is.na(rbvpois(1, NA, 1, 1))))
-  expect_true(all(is.na(rbvpois(1, 1, NA, 1))))
-  expect_true(all(is.na(rbvpois(1, 1, 1, NA))))
+  expect_warning(expect_true(all(is.na(rbvpois(1, NA, 1, 1)))))
+  expect_warning(expect_true(all(is.na(rbvpois(1, 1, NA, 1)))))
+  expect_warning(expect_true(all(is.na(rbvpois(1, 1, 1, NA)))))
   
-  expect_true(is.na(rcat(1, c(NA, 0.5))))
-  expect_true(is.na(rcat(1, c(0.5, NA))))
+  expect_warning(expect_true(is.na(rcat(1, c(NA, 0.5)))))
+  expect_warning(expect_true(is.na(rcat(1, c(0.5, NA)))))
 
-  expect_true(all(is.na(rdirichlet(1, c(NA, 0.5)))))
-  expect_true(all(is.na(rdirichlet(1, c(0.5, NA)))))
+  expect_warning(expect_true(all(is.na(rdirichlet(1, c(NA, 0.5))))))
+  expect_warning(expect_true(all(is.na(rdirichlet(1, c(0.5, NA))))))
   
-  expect_true(is.na(rdlaplace(1, NA, 1)))
-  expect_true(is.na(rdlaplace(1, 1, NA)))
+  expect_warning(expect_true(is.na(rdlaplace(1, NA, 1))))
+  expect_warning(expect_true(is.na(rdlaplace(1, 1, NA))))
   
-  # expect_true(is.na(rdnorm(1, NA, 1)))
-  # expect_true(is.na(rdnorm(1, 1, NA)))
+  expect_warning(expect_true(is.na(rdnorm(1, NA, 1))))
+  expect_warning(expect_true(is.na(rdnorm(1, 1, NA))))
   
-  expect_true(is.na(rdunif(1, NA, 10)))
-  expect_true(is.na(rdunif(1, 1, NA)))
+  expect_warning(expect_true(is.na(rdgamma(1, NA, 1))))
+  expect_warning(expect_true(is.na(rdgamma(1, 9, NA))))
   
-  expect_true(is.na(rdweibull(1, NA, 1))) 
-  expect_true(is.na(rdweibull(1, 1, NA)))
+  expect_warning(expect_true(is.na(rdunif(1, NA, 10))))
+  expect_warning(expect_true(is.na(rdunif(1, 1, NA))))
   
-  expect_true(is.na(rfatigue(1, NA, 1)))
-  expect_true(is.na(rfatigue(1, 1, NA)))
+  expect_warning(expect_true(is.na(rdweibull(1, NA, 1)))) 
+  expect_warning(expect_true(is.na(rdweibull(1, 1, NA))))
+  
+  expect_warning(expect_true(is.na(rfatigue(1, NA, 1))))
+  expect_warning(expect_true(is.na(rfatigue(1, 1, NA))))
 
-  expect_true(is.na(rfrechet(1, NA, 1, 1)))
-  expect_true(is.na(rfrechet(1, 1, NA, 1)))
-  expect_true(is.na(rfrechet(1, 1, 1, NA)))
+  expect_warning(expect_true(is.na(rfrechet(1, NA, 1, 1))))
+  expect_warning(expect_true(is.na(rfrechet(1, 1, NA, 1))))
+  expect_warning(expect_true(is.na(rfrechet(1, 1, 1, NA))))
   
-  expect_true(is.na(rgev(1, NA, 1, 1)))
-  expect_true(is.na(rgev(1, 1, NA, 1)))
-  expect_true(is.na(rgev(1, 1, 1, NA)))
+  expect_warning(expect_true(is.na(rgev(1, NA, 1, 1))))
+  expect_warning(expect_true(is.na(rgev(1, 1, NA, 1))))
+  expect_warning(expect_true(is.na(rgev(1, 1, 1, NA))))
 
-  expect_true(is.na(rgompertz(1, NA, 1)))
-  expect_true(is.na(rgompertz(1, 1, NA)))
+  expect_warning(expect_true(is.na(rgompertz(1, NA, 1))))
+  expect_warning(expect_true(is.na(rgompertz(1, 1, NA))))
 
-  expect_true(is.na(rgpd(1, NA, 1, 1)))
-  expect_true(is.na(rgpd(1, 1, NA, 1)))
-  expect_true(is.na(rgpd(1, 1, 1, NA)))
+  expect_warning(expect_true(is.na(rgpd(1, NA, 1, 1))))
+  expect_warning(expect_true(is.na(rgpd(1, 1, NA, 1))))
+  expect_warning(expect_true(is.na(rgpd(1, 1, 1, NA))))
 
-  expect_true(is.na(rgpois(1, NA, 1)))
-  expect_true(is.na(rgpois(1, 1, NA)))
+  expect_warning(expect_true(is.na(rgpois(1, NA, 1))))
+  expect_warning(expect_true(is.na(rgpois(1, 1, NA))))
   
-  expect_true(is.na(rgumbel(1, NA, 1)))
-  expect_true(is.na(rgumbel(1, 1, NA)))
+  expect_warning(expect_true(is.na(rgumbel(1, NA, 1))))
+  expect_warning(expect_true(is.na(rgumbel(1, 1, NA))))
 
-  expect_true(is.na(rhcauchy(1, NA)))
+  expect_warning(expect_true(is.na(rhcauchy(1, NA))))
 
-  expect_true(is.na(rhnorm(1, NA)))
+  expect_warning(expect_true(is.na(rhnorm(1, NA))))
   
-  expect_true(is.na(rht(1, NA, 1)))
-  expect_true(is.na(rht(1, 5, NA)))
+  expect_warning(expect_true(is.na(rht(1, NA, 1))))
+  expect_warning(expect_true(is.na(rht(1, 5, NA))))
   
-  expect_true(is.na(rhuber(1, NA, 1, 1)))
-  expect_true(is.na(rhuber(1, 0, NA, 1)))
-  expect_true(is.na(rhuber(1, 0, 1, NA)))
+  expect_warning(expect_true(is.na(rhuber(1, NA, 1, 1))))
+  expect_warning(expect_true(is.na(rhuber(1, 0, NA, 1))))
+  expect_warning(expect_true(is.na(rhuber(1, 0, 1, NA))))
   
-  # expect_true(is.na(rinvgamma(1, NA, 1)))
-  # expect_true(is.na(rinvgamma(1, 1, NA)))
+  # expect_warning(expect_true(is.na(rinvgamma(1, NA, 1))))
+  # expect_warning(expect_true(is.na(rinvgamma(1, 1, NA))))
   # 
-  # expect_true(is.na(rinvchisq(1, NA, 1)))
-  # expect_true(is.na(rinvchisq(1, 1, NA)))
+  # expect_warning(expect_true(is.na(rinvchisq(1, NA, 1))))
+  # expect_warning(expect_true(is.na(rinvchisq(1, 1, NA))))
   
-  expect_true(is.na(rkumar(1, NA, 1)))
-  expect_true(is.na(rkumar(1, 1, NA)))
+  expect_warning(expect_true(is.na(rkumar(1, NA, 1))))
+  expect_warning(expect_true(is.na(rkumar(1, 1, NA))))
 
-  expect_true(is.na(rlaplace(1, NA, 1)))
-  expect_true(is.na(rlaplace(1, 0, NA)))
+  expect_warning(expect_true(is.na(rlaplace(1, NA, 1))))
+  expect_warning(expect_true(is.na(rlaplace(1, 0, NA))))
   
-  expect_true(is.na(rlgser(1, NA)))
+  expect_warning(expect_true(is.na(rlgser(1, NA))))
   
-  expect_true(is.na(rlomax(1, NA, 1)))
-  expect_true(is.na(rlomax(1, 1, NA)))
+  expect_warning(expect_true(is.na(rlomax(1, NA, 1))))
+  expect_warning(expect_true(is.na(rlomax(1, 1, NA))))
   
-  expect_true(is.na(rmixnorm(1, c(NA,2,3), c(1,2,3), c(1/3,1/3,1/3))))
-  expect_true(is.na(rmixnorm(1, c(1,NA,3), c(1,2,3), c(1/3,1/3,1/3))))
-  expect_true(is.na(rmixnorm(1, c(1,2,NA), c(1,2,3), c(1/3,1/3,1/3))))
-  expect_true(is.na(rmixnorm(1, c(1,2,3), c(NA,2,3), c(1/3,1/3,1/3))))
-  expect_true(is.na(rmixnorm(1, c(1,2,3), c(1,NA,3), c(1/3,1/3,1/3))))
-  expect_true(is.na(rmixnorm(1, c(1,2,3), c(1,2,3), c(NA,1/3,1/3))))
-  expect_true(is.na(rmixnorm(1, c(1,2,3), c(1,2,3), c(1/3,NA,1/3))))
-  expect_true(is.na(rmixnorm(1, c(1,2,3), c(1,2,3), c(1/3,1/3,NA))))
+  expect_warning(expect_true(is.na(rmixnorm(1, c(NA,2,3), c(1,2,3), c(1/3,1/3,1/3)))))
+  expect_warning(expect_true(is.na(rmixnorm(1, c(1,NA,3), c(1,2,3), c(1/3,1/3,1/3)))))
+  expect_warning(expect_true(is.na(rmixnorm(1, c(1,2,NA), c(1,2,3), c(1/3,1/3,1/3)))))
+  expect_warning(expect_true(is.na(rmixnorm(1, c(1,2,3), c(NA,2,3), c(1/3,1/3,1/3)))))
+  expect_warning(expect_true(is.na(rmixnorm(1, c(1,2,3), c(1,NA,3), c(1/3,1/3,1/3)))))
+  expect_warning(expect_true(is.na(rmixnorm(1, c(1,2,3), c(1,2,3), c(NA,1/3,1/3)))))
+  expect_warning(expect_true(is.na(rmixnorm(1, c(1,2,3), c(1,2,3), c(1/3,NA,1/3)))))
+  expect_warning(expect_true(is.na(rmixnorm(1, c(1,2,3), c(1,2,3), c(1/3,1/3,NA)))))
 
-  expect_true(is.na(rmixpois(1, c(NA,2,3), c(1/3,1/3,1/3))))
-  expect_true(is.na(rmixpois(1, c(1,NA,3), c(1/3,1/3,1/3))))
-  expect_true(is.na(rmixpois(1, c(1,2,NA), c(1/3,1/3,1/3))))
-  expect_true(is.na(rmixpois(1, c(1,2,3), c(NA,1/3,1/3))))
-  expect_true(is.na(rmixpois(1, c(1,2,3), c(1/3,NA,1/3))))
-  expect_true(is.na(rmixpois(1, c(1,2,3), c(1/3,1/3,NA))))
+  expect_warning(expect_true(is.na(rmixpois(1, c(NA,2,3), c(1/3,1/3,1/3)))))
+  expect_warning(expect_true(is.na(rmixpois(1, c(1,NA,3), c(1/3,1/3,1/3)))))
+  expect_warning(expect_true(is.na(rmixpois(1, c(1,2,NA), c(1/3,1/3,1/3)))))
+  expect_warning(expect_true(is.na(rmixpois(1, c(1,2,3), c(NA,1/3,1/3)))))
+  expect_warning(expect_true(is.na(rmixpois(1, c(1,2,3), c(1/3,NA,1/3)))))
+  expect_warning(expect_true(is.na(rmixpois(1, c(1,2,3), c(1/3,1/3,NA)))))
   
-  expect_true(all(is.na(rdirmnom(1, NA, c(1, 1, 1)))))
-  expect_true(all(is.na(rdirmnom(1, 3, c(NA, 1, 1)))))
-  expect_true(all(is.na(rdirmnom(1, 3, c(1, NA, 1)))))
-  expect_true(all(is.na(rdirmnom(1, 3, c(1, 1, NA)))))
+  expect_warning(expect_true(is.na(rnhyper(1, NA, 35, 15))))
+  expect_warning(expect_true(is.na(rnhyper(1, 60, NA, 15))))
+  expect_warning(expect_true(is.na(rnhyper(1, 60, 35, NA))))
   
-  expect_true(all(is.na(rmnom(1, NA, c(1/3, 1/3, 1/3)))))
-  expect_true(all(is.na(rmnom(1, 3, c(NA, 1/3, 1/3)))))
-  expect_true(all(is.na(rmnom(1, 3, c(1/3, NA, 1/3)))))
-  expect_true(all(is.na(rmnom(1, 3, c(1/3, 1/3, NA)))))
+  expect_warning(expect_true(all(is.na(rdirmnom(1, NA, c(1, 1, 1))))))
+  expect_warning(expect_true(all(is.na(rdirmnom(1, 3, c(NA, 1, 1))))))
+  expect_warning(expect_true(all(is.na(rdirmnom(1, 3, c(1, NA, 1))))))
+  expect_warning(expect_true(all(is.na(rdirmnom(1, 3, c(1, 1, NA))))))
   
-  expect_true(all(is.na(rmvhyper(1, c(NA,3,4), 5))))
-  expect_true(all(is.na(rmvhyper(1, c(2,NA,4), 5))))
-  expect_true(all(is.na(rmvhyper(1, c(2,3,NA), 5))))
-  expect_true(all(is.na(rmvhyper(1, c(2,3,4), NA))))
+  expect_warning(expect_true(all(is.na(rmnom(1, NA, c(1/3, 1/3, 1/3))))))
+  expect_warning(expect_true(all(is.na(rmnom(1, 3, c(NA, 1/3, 1/3))))))
+  expect_warning(expect_true(all(is.na(rmnom(1, 3, c(1/3, NA, 1/3))))))
+  expect_warning(expect_true(all(is.na(rmnom(1, 3, c(1/3, 1/3, NA))))))
   
-  expect_true(is.na(rnsbeta(1, NA, 1, -2, 2)))
-  expect_true(is.na(rnsbeta(1, 1, NA, -2, 2)))
-  expect_true(is.na(rnsbeta(1, 1, 1, NA, 2)))
-  expect_true(is.na(rnsbeta(1, 1, 1, -2, NA)))
+  expect_warning(expect_true(all(is.na(rmvhyper(1, c(NA,3,4), 5)))))
+  expect_warning(expect_true(all(is.na(rmvhyper(1, c(2,NA,4), 5)))))
+  expect_warning(expect_true(all(is.na(rmvhyper(1, c(2,3,NA), 5)))))
+  expect_warning(expect_true(all(is.na(rmvhyper(1, c(2,3,4), NA)))))
+  
+  expect_warning(expect_true(is.na(rnsbeta(1, NA, 1, -2, 2))))
+  expect_warning(expect_true(is.na(rnsbeta(1, 1, NA, -2, 2))))
+  expect_warning(expect_true(is.na(rnsbeta(1, 1, 1, NA, 2))))
+  expect_warning(expect_true(is.na(rnsbeta(1, 1, 1, -2, NA))))
 
-  expect_true(is.na(rnst(1, NA, 0, 1)))
-  expect_true(is.na(rnst(1, 2, NA, 1)))
-  expect_true(is.na(rnst(1, 2, 0, NA)))
+  expect_warning(expect_true(is.na(rnst(1, NA, 0, 1))))
+  expect_warning(expect_true(is.na(rnst(1, 2, NA, 1))))
+  expect_warning(expect_true(is.na(rnst(1, 2, 0, NA))))
   
-  expect_true(is.na(rpareto(1, NA, 1)))
-  expect_true(is.na(rpareto(1, 1, NA)))
+  expect_warning(expect_true(is.na(rpareto(1, NA, 1))))
+  expect_warning(expect_true(is.na(rpareto(1, 1, NA))))
   
-  expect_true(is.na(rprop(1, NA, 0.5)))
-  expect_true(is.na(rprop(1, 10, NA)))
+  expect_warning(expect_true(is.na(rprop(1, NA, 0.5))))
+  expect_warning(expect_true(is.na(rprop(1, 10, NA))))
   
-  expect_true(is.na(rrayleigh(1, NA)))
+  expect_warning(expect_true(is.na(rrayleigh(1, NA))))
   
-  expect_true(is.na(rskellam(1, NA, 1)))
-  expect_true(is.na(rskellam(1, 1, NA)))
+  expect_warning(expect_true(is.na(rtlambda(1, NA))))
   
-  expect_true(is.na(rslash(1, NA, 1)))
-  expect_true(is.na(rslash(1, 1, NA)))
+  expect_warning(expect_true(is.na(rsgomp(1, NA, 1))))
+  expect_warning(expect_true(is.na(rsgomp(1, 0.4, NA))))
   
-  expect_true(is.na(rtnorm(1, NA, 1, -2, 2)))
-  expect_true(is.na(rtnorm(1, 0, NA, -2, 2)))
-  expect_true(is.na(rtnorm(1, 0, 1, NA, 2)))
-  expect_true(is.na(rtnorm(1, 0, 1, -2, NA)))
+  expect_warning(expect_true(is.na(rskellam(1, NA, 1))))
+  expect_warning(expect_true(is.na(rskellam(1, 1, NA))))
+  
+  expect_warning(expect_true(is.na(rslash(1, NA, 1))))
+  expect_warning(expect_true(is.na(rslash(1, 1, NA))))
+  
+  expect_warning(expect_true(is.na(rtnorm(1, NA, 1, -2, 2))))
+  expect_warning(expect_true(is.na(rtnorm(1, 0, NA, -2, 2))))
+  expect_warning(expect_true(is.na(rtnorm(1, 0, 1, NA, 2))))
+  expect_warning(expect_true(is.na(rtnorm(1, 0, 1, -2, NA))))
 
-  expect_true(is.na(rtpois(1, NA, 0)))
-  expect_true(is.na(rtpois(1, 5, NA)))
+  expect_warning(expect_true(is.na(rtpois(1, NA, 0))))
+  expect_warning(expect_true(is.na(rtpois(1, 5, NA))))
   
-  expect_true(is.na(rtriang(1, NA, 1, 0.5)))
-  expect_true(is.na(rtriang(1, 0, NA, 0.5)))
-  expect_true(is.na(rtriang(1, 0, 1, NA)))
+  expect_warning(expect_true(is.na(rtriang(1, NA, 1, 0.5))))
+  expect_warning(expect_true(is.na(rtriang(1, 0, NA, 0.5))))
+  expect_warning(expect_true(is.na(rtriang(1, 0, 1, NA))))
   
-  expect_true(is.na(rwald(1, NA, 1)))
-  expect_true(is.na(rwald(1, 1, NA)))
+  expect_warning(expect_true(is.na(rwald(1, NA, 1))))
+  expect_warning(expect_true(is.na(rwald(1, 1, NA))))
   
-  expect_true(is.na(rzip(1, NA, 0.5)))
-  expect_true(is.na(rzip(1, 1, NA)))
+  expect_warning(expect_true(is.na(rzip(1, NA, 0.5))))
+  expect_warning(expect_true(is.na(rzip(1, 1, NA))))
   
-  expect_true(is.na(rzib(1, NA, 0.5, 0.5)))
-  expect_true(is.na(rzib(1, 1, NA, 0.5)))
-  expect_true(is.na(rzib(1, 1, 0.5, NA)))
+  expect_warning(expect_true(is.na(rzib(1, NA, 0.5, 0.5))))
+  expect_warning(expect_true(is.na(rzib(1, 1, NA, 0.5))))
+  expect_warning(expect_true(is.na(rzib(1, 1, 0.5, NA))))
   
-  expect_true(is.na(rzinb(1, NA, 0.5, 0.5)))
-  expect_true(is.na(rzinb(1, 1, NA, 0.5)))
-  expect_true(is.na(rzinb(1, 1, 0.5, NA)))
+  expect_warning(expect_true(is.na(rzinb(1, NA, 0.5, 0.5))))
+  expect_warning(expect_true(is.na(rzinb(1, 1, NA, 0.5))))
+  expect_warning(expect_true(is.na(rzinb(1, 1, 0.5, NA))))
 
 })

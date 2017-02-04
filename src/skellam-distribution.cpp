@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -8,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
 /*
@@ -25,24 +20,25 @@ using Rcpp::NumericMatrix;
  * 
  */
 
-double pmf_skellam(double x, double mu1, double mu2) {
+inline double pmf_skellam(double x, double mu1, double mu2,
+                          bool& throw_warning) {
   if (ISNAN(x) || ISNAN(mu1) || ISNAN(mu2))
-    return NA_REAL;
+    return x+mu1+mu2;
   if (mu1 < 0.0 || mu2 < 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
-  if (!isInteger(x))
+  if (!isInteger(x) || !R_FINITE(x))
     return 0.0;
-  return exp(-(mu1+mu2)) * pow(mu1/mu2, x/2.0) * R::bessel_i(2.0*sqrt(mu1*mu2), x, 1.0);
+  return exp(-(mu1+mu2)) * pow(mu1/mu2, x/2.0) *
+    R::bessel_i(2.0*sqrt(mu1*mu2), x, 1.0);
 }
 
-double rng_skellam(double mu1, double mu2) {
-  if (ISNAN(mu1) || ISNAN(mu2))
+inline double rng_skellam(double mu1, double mu2,
+                          bool& throw_warning) {
+  if (ISNAN(mu1) || ISNAN(mu2) || mu1 < 0.0 || mu2 < 0.0) {
+    throw_warning = true;
     return NA_REAL;
-  if (mu1 < 0.0 || mu2 < 0.0) {
-    Rcpp::warning("NaNs produced");
-    return NAN;
   }
   return R::rpois(mu1) - R::rpois(mu2);
 }
@@ -54,21 +50,27 @@ NumericVector cpp_dskellam(
     const NumericVector& x,
     const NumericVector& mu1,
     const NumericVector& mu2,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
   
-  int nx = x.length();
-  int na = mu1.length();
-  int nb = mu2.length();
-  int Nmax = Rcpp::max(IntegerVector::create(nx, na, nb));
+  int Nmax = std::max({
+    x.length(),
+    mu1.length(),
+    mu2.length()
+  });
   NumericVector p(Nmax);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < Nmax; i++)
-    p[i] = pmf_skellam(x[i % nx], mu1[i % na], mu2[i % nb]);
+    p[i] = pmf_skellam(GETV(x, i), GETV(mu1, i),
+                       GETV(mu2, i), throw_warning);
   
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -76,17 +78,21 @@ NumericVector cpp_dskellam(
 
 // [[Rcpp::export]]
 NumericVector cpp_rskellam(
-    const int n,
+    const int& n,
     const NumericVector& mu1,
     const NumericVector& mu2
   ) {
   
-  int na = mu1.length();
-  int nb = mu2.length();
   NumericVector x(n);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < n; i++)
-    x[i] = rng_skellam(mu1[i % na], mu2[i % nb]);
+    x[i] = rng_skellam(GETV(mu1, i), GETV(mu2, i),
+                       throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
   
   return x;
 }

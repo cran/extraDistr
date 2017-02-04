@@ -1,4 +1,6 @@
 #include <Rcpp.h>
+#include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -7,11 +9,6 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
 using Rcpp::NumericMatrix;
 
@@ -35,19 +32,21 @@ using Rcpp::NumericMatrix;
 */
 
 
-double pdf_bnorm(double x, double y,
-                 double mu1, double mu2,
-                 double sigma1, double sigma2,
-                 double rho) {
+inline double pdf_bnorm(double x, double y, double mu1, double mu2,
+                        double sigma1, double sigma2, double rho,
+                        bool& throw_warning) {
   
   if (ISNAN(x) || ISNAN(y) || ISNAN(mu1) || ISNAN(mu2) ||
       ISNAN(sigma1) || ISNAN(sigma2) || ISNAN(rho))
-    return NA_REAL;
+    return x+y+mu1+mu2+sigma1+sigma2+rho;
   
   if (sigma1 <= 0.0 || sigma2 <= 0.0 || rho <= -1.0 || rho >= 1.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
+  
+  if (!R_FINITE(x) || !R_FINITE(y))
+    return 0.0;
   
   double z1 = (x - mu1)/sigma1;
   double z2 = (y - mu2)/sigma2;
@@ -68,28 +67,36 @@ NumericVector cpp_dbnorm(
     const NumericVector& sigma1,
     const NumericVector& sigma2,
     const NumericVector& rho,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
 
-  int nx  = x.length();
-  int ny  = y.length();
-  int nm1 = mu1.length();
-  int nm2 = mu2.length();
-  int ns1 = sigma1.length();
-  int ns2 = sigma2.length();
-  int nr = rho.length();
-  int Nmax = Rcpp::max(IntegerVector::create(nx, ny, nm1, nm2, ns1, ns2, nr));
+  int Nmax = std::max({
+    x.length(),
+    y.length(),
+    mu1.length(),
+    mu2.length(),
+    sigma1.length(),
+    sigma2.length(),
+    rho.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
+  
+  if (x.length() != y.length())
+    Rcpp::stop("lengths of x and y differ");
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_bnorm(x[i % nx], y[i % ny],
-                     mu1[i % nm1], mu2[i % nm2],
-                     sigma1[i % ns1], sigma2[i % ns2],
-                     rho[i % nr]);
+    p[i] = pdf_bnorm(GETV(x, i), GETV(y, i), GETV(mu1, i),
+                     GETV(mu2, i), GETV(sigma1, i),
+                     GETV(sigma2, i), GETV(rho, i),
+                     throw_warning);
 
   if (log_prob)
-    for (int i = 0; i < nx; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -97,7 +104,7 @@ NumericVector cpp_dbnorm(
 
 // [[Rcpp::export]]
 NumericMatrix cpp_rbnorm(
-    const int n,
+    const int& n,
     const NumericVector& mu1,
     const NumericVector& mu2,
     const NumericVector& sigma1,
@@ -105,36 +112,34 @@ NumericMatrix cpp_rbnorm(
     const NumericVector& rho
   ) {
 
-  int nm1 = mu1.length();
-  int nm2 = mu2.length();
-  int ns1 = sigma1.length();
-  int ns2 = sigma2.length();
-  int nr = rho.length();
-  
   NumericMatrix x(n, 2);
+  double u, v, corr;
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < n; i++) {
-    if (ISNAN(mu1[i % nm1]) || ISNAN(mu2[i % nm1]) ||
-        ISNAN(sigma1[i % ns1]) || ISNAN(sigma2[i % ns2]) ||
-        ISNAN(rho[i % nr])) {
+    if (ISNAN(GETV(mu1, i)) || ISNAN(GETV(mu2, i)) ||
+        ISNAN(GETV(sigma1, i)) || ISNAN(GETV(sigma2, i)) ||
+        ISNAN(GETV(rho, i)) || GETV(sigma1, i) <= 0.0 ||
+        GETV(sigma2, i) <= 0.0 || GETV(rho, i) < -1.0 ||
+        GETV(rho, i) > 1.0) {
+      throw_warning = true;
       x(i, 0) = NA_REAL;
       x(i, 1) = NA_REAL;
-    } else if (sigma1[i % ns1] <= 0.0 || sigma2[i % ns2] <= 0.0 ||
-        rho[i % nr] < -1.0 || rho[i % nr] > 1.0) {
-      Rcpp::warning("NaNs produced");
-      x(i, 0) = NAN;
-      x(i, 1) = NAN;
-    } else if (rho[i % nr] != 0.0) {
-      double u = R::norm_rand();
-      double v = R::norm_rand();
-      double corr = (rho[i % nr]*u + sqrt(1.0 - pow(rho[i % nr], 2.0))*v);
-      x(i, 0) = mu1[i % nm1] + sigma1[i % ns1] * u;
-      x(i, 1) = mu2[i % nm2] + sigma2[i % ns2] * corr;
+    } else if (!tol_equal(GETV(rho, i), 0.0)) {
+      u = R::norm_rand();
+      v = R::norm_rand();
+      corr = (GETV(rho, i)*u + sqrt(1.0 - pow(GETV(rho, i), 2.0))*v);
+      x(i, 0) = GETV(mu1, i) + GETV(sigma1, i) * u;
+      x(i, 1) = GETV(mu2, i) + GETV(sigma2, i) * corr;
     } else {
-      x(i, 0) = R::rnorm(mu1[i % nm1], sigma1[i % ns1]);
-      x(i, 1) = R::rnorm(mu2[i % nm2], sigma2[i % ns2]);
+      x(i, 0) = R::rnorm(GETV(mu1, i), GETV(sigma1, i));
+      x(i, 1) = R::rnorm(GETV(mu2, i), GETV(sigma2, i));
     }
   }
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
 
   return x;
 }

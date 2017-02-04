@@ -1,6 +1,6 @@
 #include <Rcpp.h>
-#include "const.h"
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -9,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
 /*
@@ -29,37 +23,39 @@ using Rcpp::NumericMatrix;
  */
 
 
-double pdf_slash(double x, double mu, double sigma) {
+inline double pdf_slash(double x, double mu, double sigma,
+                        bool& throw_warning) {
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma))
-    return NA_REAL;
+    return x+mu+sigma;
   if (sigma <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   double z = (x - mu)/sigma;
+  if (z == 0.0)
+    return 1.0/(2.0 * SQRT_2_PI);
   return ((PHI_0 - phi(z))/pow(z, 2.0))/sigma;
 }
 
-double cdf_slash(double x, double mu, double sigma) {
+inline double cdf_slash(double x, double mu, double sigma,
+                        bool& throw_warning) {
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma))
-    return NA_REAL;
+    return x+mu+sigma;
   if (sigma <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   double z = (x - mu)/sigma;
   if (z == 0.0)
     return 0.5;
-  else
-    return Phi(z) - (PHI_0 - phi(z))/z;
+  return Phi(z) - (PHI_0 - phi(z))/z;
 }
 
-double rng_slash(double mu, double sigma) {
-  if (ISNAN(mu) || ISNAN(sigma))
+inline double rng_slash(double mu, double sigma,
+                        bool& throw_warning) {
+  if (ISNAN(mu) || ISNAN(sigma) || sigma <= 0.0) {
+    throw_warning = true;
     return NA_REAL;
-  if (sigma <= 0.0) {
-    Rcpp::warning("NaNs produced");
-    return NAN;
   }
   double z = R::norm_rand();
   double u = rng_unif();
@@ -73,21 +69,27 @@ NumericVector cpp_dslash(
     const NumericVector& x,
     const NumericVector& mu,
     const NumericVector& sigma,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
   
-  int n  = x.length();
-  int nm = mu.length();
-  int ns = sigma.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nm, ns));
+  int Nmax = std::max({
+    x.length(),
+    mu.length(),
+    sigma.length()
+  });
   NumericVector p(Nmax);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_slash(x[i % n], mu[i % nm], sigma[i % ns]);
+    p[i] = pdf_slash(GETV(x, i), GETV(mu, i),
+                     GETV(sigma, i), throw_warning);
   
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -98,25 +100,31 @@ NumericVector cpp_pslash(
     const NumericVector& x,
     const NumericVector& mu,
     const NumericVector& sigma,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
   
-  int n  = x.length();
-  int nm = mu.length();
-  int ns = sigma.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nm, ns));
+  int Nmax = std::max({
+    x.length(),
+    mu.length(),
+    sigma.length()
+  });
   NumericVector p(Nmax);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < Nmax; i++)
-    p[i] = cdf_slash(x[i % n], mu[i % nm], sigma[i % ns]);
+    p[i] = cdf_slash(GETV(x, i), GETV(mu, i),
+                     GETV(sigma, i), throw_warning);
   
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
+    p = 1.0 - p;
   
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -124,17 +132,21 @@ NumericVector cpp_pslash(
 
 // [[Rcpp::export]]
 NumericVector cpp_rslash(
-    const int n,
+    const int& n,
     const NumericVector& mu,
     const NumericVector& sigma
   ) {
   
-  int nm = mu.length();
-  int ns = sigma.length();
   NumericVector x(n);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < n; i++)
-    x[i] = rng_slash(mu[i % nm], sigma[i % ns]);
+    x[i] = rng_slash(GETV(mu, i), GETV(sigma, i),
+                     throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
   
   return x;
 }

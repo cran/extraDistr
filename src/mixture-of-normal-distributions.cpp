@@ -1,6 +1,6 @@
 #include <Rcpp.h>
-#include "const.h"
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -9,11 +9,6 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
 using Rcpp::NumericMatrix;
 
@@ -24,59 +19,61 @@ NumericVector cpp_dmixnorm(
     const NumericMatrix& mu,
     const NumericMatrix& sigma,
     const NumericMatrix& alpha,
-    bool log_prob = false
-) {
+    const bool& log_prob = false
+  ) {
   
-  int n  = x.length();
-  int nm = mu.nrow();
-  int ns = sigma.nrow();
-  int na = alpha.nrow();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nm, ns, na));
+  int Nmax = std::max({
+    static_cast<int>(x.length()),
+    static_cast<int>(mu.nrow()),
+    static_cast<int>(sigma.nrow()),
+    static_cast<int>(alpha.nrow())
+  });
   int k = alpha.ncol();
   NumericVector p(Nmax);
   
-  if (k != mu.ncol() || k != sigma.ncol())
-    Rcpp::stop("sizes of 'mu', 'sigma', and 'alpha' do not match");
+  bool throw_warning = false;
   
-  bool wrong_param, missings;
-  double alpha_tot;
+  if (k != mu.ncol() || k != sigma.ncol())
+    Rcpp::stop("sizes of mu, sigma, and alpha do not match");
+  
+  bool wrong_param;
+  double alpha_tot, nans_sum;
   
   for (int i = 0; i < Nmax; i++) {
     wrong_param = false;
     alpha_tot = 0.0;
+    nans_sum = 0.0;
     p[i] = 0.0;
-    missings = false;
     
     for (int j = 0; j < k; j++) {
-      if (ISNAN(alpha(i % na, j)) || ISNAN(mu(i % nm, j)) || ISNAN(sigma(i % ns, j))) {
-        missings = true;
-        break;
-      }
-      if (alpha(i % na, j) < 0.0 || sigma(i % ns, j) <= 0.0) {
+      if (GETM(alpha, i, j) < 0.0 || GETM(sigma, i, j) <= 0.0)
         wrong_param = true;
-        break;
-      }
-      alpha_tot += alpha(i % na, j);
+      nans_sum += GETM(mu, i, j) + GETM(sigma, i, j);
+      alpha_tot += GETM(alpha, i, j);
     }
     
-    if (missings || ISNAN(x[i])) {
-      p[i] = NA_REAL;
+    if (ISNAN(nans_sum + alpha_tot + GETV(x, i))) {
+      p[i] = nans_sum + alpha_tot + GETV(x, i);
       continue;
     }
     
     if (wrong_param) {
-      Rcpp::warning("NaNs produced");
+      throw_warning = true;
       p[i] = NAN;
       continue;
     }
     
-    for (int j = 0; j < k; j++)
-      p[i] += (alpha(i % na, j) / alpha_tot) * R::dnorm(x[i], mu(i % nm, j), sigma(i % ns, j), false);
+    for (int j = 0; j < k; j++) {
+      p[i] += (GETM(alpha, i, j) / alpha_tot) *
+        R::dnorm(GETV(x, i), GETM(mu, i, j), GETM(sigma, i, j), false);
+    }
   }
   
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -88,59 +85,67 @@ NumericVector cpp_pmixnorm(
     const NumericMatrix& mu,
     const NumericMatrix& sigma,
     const NumericMatrix& alpha,
-    bool lower_tail = true, bool log_prob = false
-) {
+    const bool& lower_tail = true,
+    const bool& log_prob = false
+  ) {
   
-  int n  = x.length();
-  int nm = mu.nrow();
-  int ns = sigma.nrow();
-  int na = alpha.nrow();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nm, ns, na));
+  int Nmax = std::max({
+    static_cast<int>(x.length()),
+    static_cast<int>(mu.nrow()),
+    static_cast<int>(sigma.nrow()),
+    static_cast<int>(alpha.nrow())
+  });
   int k = alpha.ncol();
   NumericVector p(Nmax);
   
-  if (k != mu.ncol() || k != sigma.ncol())
-    Rcpp::stop("sizes of 'mu', 'sigma', and 'alpha' do not match");
+  bool throw_warning = false;
   
-  bool wrong_param, missings;
-  double alpha_tot;
+  if (k != mu.ncol() || k != sigma.ncol())
+    Rcpp::stop("sizes of mu, sigma, and alpha do not match");
+  
+  bool wrong_param;
+  double alpha_tot, nans_sum;
   
   for (int i = 0; i < Nmax; i++) {
     wrong_param = false;
     alpha_tot = 0.0;
+    nans_sum = 0.0;
     p[i] = 0.0;
-    missings = false;
     
     for (int j = 0; j < k; j++) {
-      if (ISNAN(alpha(i % na, j)) || ISNAN(mu(i % nm, j)) || ISNAN(sigma(i % ns, j))) {
-        missings = true;
-        break;
-      }
-      if (alpha(i % na, j) < 0.0 || sigma(i % ns, j) < 0.0) {
+      if (GETM(alpha, i, j) < 0.0 || GETM(sigma, i, j) < 0.0) {
         wrong_param = true;
         break;
       }
-      alpha_tot += alpha(i % na, j);
+      nans_sum += GETM(mu, i, j) + GETM(sigma, i, j);
+      alpha_tot += GETM(alpha, i, j);
     }
     
-    if (missings || ISNAN(x[i])) {
-      p[i] = NA_REAL;
+    if (ISNAN(nans_sum + alpha_tot + GETV(x, i))) {
+      p[i] = nans_sum + alpha_tot + GETV(x, i);
       continue;
     }
     
     if (wrong_param) {
-      Rcpp::warning("NaNs produced");
+      throw_warning = true;
       p[i] = NAN;
       continue;
     }
     
-    for (int j = 0; j < k; j++)
-      p[i] += (alpha(i % na, j) / alpha_tot) * R::pnorm(x[i], mu(i % nm, j), sigma(i % ns, j), lower_tail, false);
+    for (int j = 0; j < k; j++) {
+      p[i] += (GETM(alpha, i, j) / alpha_tot) *
+        R::pnorm(GETV(x, i), GETM(mu, i, j), GETM(sigma, i, j), true, false);
+    }
   }
   
+  if (!lower_tail)
+    p = 1.0 - p;
+  
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -148,24 +153,23 @@ NumericVector cpp_pmixnorm(
 
 // [[Rcpp::export]]
 NumericVector cpp_rmixnorm(
-    const int n,
+    const int& n,
     const NumericMatrix& mu,
     const NumericMatrix& sigma,
     const NumericMatrix& alpha
-) {
+  ) {
   
-  int nm = mu.nrow();
-  int ns = sigma.nrow();
-  int na = alpha.nrow();
   int k = alpha.ncol();
   NumericVector x(n);
   
+  bool throw_warning = false;
+  
   if (k != mu.ncol() || k != sigma.ncol())
-    Rcpp::stop("sizes of 'mu', 'sigma', and 'alpha' do not match");
+    Rcpp::stop("sizes of mu, sigma, and alpha do not match");
   
   int jj;
-  bool wrong_param, missings;
-  double u, p_tmp, alpha_tot;
+  bool wrong_param;
+  double alpha_tot, nans_sum, u, p_tmp;
   NumericVector prob(k);
   
   for (int i = 0; i < n; i++) {
@@ -174,41 +178,36 @@ NumericVector cpp_rmixnorm(
     u = rng_unif();
     p_tmp = 1.0;
     alpha_tot = 0.0;
-    missings = false;
+    nans_sum = 0.0;
     
     for (int j = 0; j < k; j++) {
-      if (ISNAN(alpha(i % na, j)) || ISNAN(mu(i % nm, j)) || ISNAN(sigma(i % ns, j))) {
-        missings = true;
-        break;
-      }
-      if (alpha(i % na, j) < 0.0 || sigma(i % ns, j) < 0.0) {
+      if (GETM(alpha, i, j) < 0.0 || GETM(sigma, i, j) < 0.0) {
         wrong_param = true;
         break;
       }
-      alpha_tot += alpha(i % na, j);
+      nans_sum += GETM(mu, i, j) + GETM(sigma, i, j);
+      alpha_tot += GETM(alpha, i, j);
     }
     
-    if (missings || ISNAN(x[i])) {
+    if (ISNAN(nans_sum + alpha_tot) || wrong_param) {
+      throw_warning = true;
       x[i] = NA_REAL;
       continue;
     }
     
-    if (wrong_param) {
-      Rcpp::warning("NaNs produced");
-      x[i] = NAN;
-      continue;
-    }
-    
     for (int j = k-1; j >= 0; j--) {
-      p_tmp -= alpha(i % na, j) / alpha_tot;
+      p_tmp -= GETM(alpha, i, j) / alpha_tot;
       if (u > p_tmp) {
         jj = j;
         break;
       }
     }
 
-    x[i] = R::rnorm(mu(i % nm, jj), sigma(i % ns, jj)); 
+    x[i] = R::rnorm(GETM(mu, i, jj), GETM(sigma, i, jj)); 
   }
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
   
   return x;
 }

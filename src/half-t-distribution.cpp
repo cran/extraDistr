@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -8,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
 /*
@@ -30,11 +25,12 @@ using Rcpp::NumericMatrix;
  * 
  */
 
-double pdf_ht(double x, double nu, double sigma) {
+inline double pdf_ht(double x, double nu, double sigma,
+                     bool& throw_warning) {
   if (ISNAN(x) || ISNAN(nu) || ISNAN(sigma))
-    return NA_REAL;
+    return x+nu+sigma;
   if (sigma <= 0.0 || nu <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   if (x < 0.0)
@@ -42,11 +38,12 @@ double pdf_ht(double x, double nu, double sigma) {
   return 2.0 * R::dt(x/sigma, nu, false)/sigma;
 }
 
-double cdf_ht(double x, double nu, double sigma) {
+inline double cdf_ht(double x, double nu, double sigma,
+                     bool& throw_warning) {
   if (ISNAN(x) || ISNAN(nu) || ISNAN(sigma))
-    return NA_REAL;
+    return x+nu+sigma;
   if (sigma <= 0.0 || nu <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   if (x < 0.0)
@@ -54,22 +51,21 @@ double cdf_ht(double x, double nu, double sigma) {
   return 2.0 * R::pt(x/sigma, nu, true, false) - 1.0;
 }
 
-double invcdf_ht(double p, double nu, double sigma) {
+inline double invcdf_ht(double p, double nu, double sigma,
+                        bool& throw_warning) {
   if (ISNAN(p) || ISNAN(nu) || ISNAN(sigma))
-    return NA_REAL;
-  if (sigma <= 0.0 || nu <= 0.0 || p < 0.0 || p > 1.0) {
-    Rcpp::warning("NaNs produced");
+    return p+nu+sigma;
+  if (sigma <= 0.0 || nu <= 0.0 || !VALID_PROB(p)) {
+    throw_warning = true;
     return NAN;
   }
   return R::qt((p+1.0)/2.0, nu, true, false) * sigma;
 }
 
-double rng_ht(double nu, double sigma) {
-  if (ISNAN(nu) || ISNAN(sigma))
+inline double rng_ht(double nu, double sigma, bool& throw_warning) {
+  if (ISNAN(nu) || ISNAN(sigma) || sigma <= 0.0 || nu <= 0.0) {
+    throw_warning = true;
     return NA_REAL;
-  if (sigma <= 0.0 || nu <= 0.0) {
-    Rcpp::warning("NaNs produced");
-    return NAN;
   }
   return abs(R::rt(nu) * sigma);
 }
@@ -80,21 +76,27 @@ NumericVector cpp_dht(
     const NumericVector& x,
     const NumericVector& nu,
     const NumericVector& sigma,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
   
-  int n  = x.length();
-  int nn = nu.length();
-  int ns = sigma.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nn, ns));
+  int Nmax = std::max({
+    x.length(),
+    nu.length(),
+    sigma.length()
+  });
   NumericVector p(Nmax);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < Nmax; i++) 
-    p[i] = pdf_ht(x[i % n], nu[i % nn], sigma[i % ns]);
+    p[i] = pdf_ht(GETV(x, i), GETV(nu, i),
+                  GETV(sigma, i), throw_warning);
   
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -105,25 +107,31 @@ NumericVector cpp_pht(
     const NumericVector& x,
     const NumericVector& nu,
     const NumericVector& sigma,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
   
-  int n  = x.length();
-  int nn = nu.length();
-  int ns = sigma.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nn, ns));
+  int Nmax = std::max({
+    x.length(),
+    nu.length(),
+    sigma.length()
+  });
   NumericVector p(Nmax);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < Nmax; i++)
-    p[i] = cdf_ht(x[i % n], nu[i % nn], sigma[i % ns]);
+    p[i] = cdf_ht(GETV(x, i), GETV(nu, i),
+                  GETV(sigma, i), throw_warning);
   
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
+    p = 1.0 - p;
   
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -134,26 +142,32 @@ NumericVector cpp_qht(
     const NumericVector& p,
     const NumericVector& nu,
     const NumericVector& sigma,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
   
-  int n  = p.length();
-  int nn = nu.length();
-  int ns = sigma.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nn, ns));
+  int Nmax = std::max({
+    p.length(),
+    nu.length(),
+    sigma.length()
+  });
   NumericVector q(Nmax);
   NumericVector pp = Rcpp::clone(p);
   
+  bool throw_warning = false;
+  
   if (log_prob)
-    for (int i = 0; i < n; i++)
-      pp[i] = exp(pp[i]);
+    pp = Rcpp::exp(pp);
   
   if (!lower_tail)
-    for (int i = 0; i < n; i++)
-      pp[i] = 1.0 - pp[i];
+    pp = 1.0 - pp;
   
   for (int i = 0; i < Nmax; i++)
-    q[i] = invcdf_ht(pp[i % n], nu[i % nn], sigma[i % ns]);
+    q[i] = invcdf_ht(GETV(pp, i), GETV(nu, i),
+                     GETV(sigma, i), throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return q;
 }
@@ -161,17 +175,21 @@ NumericVector cpp_qht(
 
 // [[Rcpp::export]]
 NumericVector cpp_rht(
-    const int n,
+    const int& n,
     const NumericVector& nu,
     const NumericVector& sigma
   ) {
   
-  int nn = nu.length();
-  int ns = sigma.length();
   NumericVector x(n);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < n; i++)
-    x[i] = rng_ht(nu[i % nn], sigma[i % ns]);
+    x[i] = rng_ht(GETV(nu, i), GETV(sigma, i),
+                  throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
   
   return x;
 }

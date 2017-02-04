@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -8,11 +9,6 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
 using Rcpp::NumericMatrix;
 
@@ -37,83 +33,75 @@ NumericVector cpp_dmvhyper(
     const NumericMatrix& x,
     const NumericMatrix& n,
     const NumericVector& k,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
   
-  int nx = x.nrow();
-  int nr = n.nrow();
+  int Nmax = std::max({
+    static_cast<int>(x.nrow()),
+    static_cast<int>(n.nrow()),
+    static_cast<int>(k.length())
+  });
   int m = x.ncol();
-  int nk = k.length();
-  int Nmax = Rcpp::max(IntegerVector::create(nx, nr, nk));
   NumericVector p(Nmax);
   
+  bool throw_warning = false;
+  
   if (m != n.ncol())
-    Rcpp::stop("Number of columns in 'x' does not equal number of columns in 'n'.");
+    Rcpp::stop("number of columns in x does not equal number of columns in n");
 
+  bool wrong_n, wrong_x;
+  double lNck, sum_x, lncx_prod, n_tot;
+  
   for (int i = 0; i < Nmax; i++) {
     
-    bool missings = false;
-    
-    if (ISNAN(k[i % nk]))
-      missings = true;
+    wrong_x = false;
+    wrong_n = false;
+    sum_x = 0.0;
+    lncx_prod = 0.0;
+    n_tot = 0.0;
     
     for (int j = 0; j < m; j++) {
-      if (ISNAN(x(i % nx, j)) || ISNAN(n(i % nr, j))) {
-        missings = true;
-        break;
-      }
+      if (!isInteger(GETM(n, i, j), false) || GETM(n, i, j) < 0.0)
+        wrong_n = true;
+      sum_x += GETM(x, i, j);
+      n_tot += GETM(n, i, j);
     }
     
-    if (missings) {
-      p[i] = NA_REAL;
+    if (ISNAN(sum_x + n_tot + GETV(k, i))) {
+      p[i] = sum_x + n_tot + GETV(k, i);
       continue;
     } 
     
-    bool wrong_n = false;
-    double N = 0.0;
+    if (wrong_n || GETV(k, i) < 0.0 || GETV(k, i) > n_tot ||
+        !isInteger(GETV(k, i), false)) {
+      throw_warning = true;
+      p[i] = NAN;
+      continue;
+    }
+    
     for (int j = 0; j < m; j++) {
-      N += n(i % nr, j);
-      if (floor(n(i % nr, j)) != n(i % nr, j) || n(i % nr, j) < 0.0) {
-        wrong_n = true;
-        break;
+      if (GETM(x, i, j) > GETM(n, i, j) || GETM(x, i, j) < 0.0 ||
+          !isInteger(GETM(x, i, j))) {
+        wrong_x = true;
+      } else {
+        lncx_prod += R::lchoose(GETM(n, i, j), GETM(x, i, j));
       }
     }
     
-    if (wrong_n || k[i % nk] < 0.0 || k[i % nk] > N ||
-        floor(k[i % nk]) != k[i % nk]) {
-      Rcpp::warning("NaNs produced");
-      p[i] = NAN;
+    if (wrong_x || sum_x != GETV(k, i)) {
+      p[i] = R_NegInf;
     } else {
-      
-      double lNck = R::lchoose(N, k[i % nk]);
-      double row_sum = 0.0;
-      double lncx_prod = 0.0;
-      bool wrong_x = false;
-      
-      for (int j = 0; j < m; j++) {
-        if (x(i % nx, j) > n(i % nr, j) || x(i % nx, j) < 0.0 ||
-            !isInteger(x(i % nx, j))) {
-          wrong_x = true;
-        } else {
-          lncx_prod += R::lchoose(n(i % nr, j), x(i % nx, j));
-          row_sum += x(i % nx, j);
-        }
-      }
-      
-      if (N < k[i % nk]) {
-        Rcpp::warning("NaNs produced");
-        p[i] = NAN;
-      } else if (wrong_x || row_sum != k[i % nk]) {
-        p[i] = -INFINITY;
-      } else {
-        p[i] = lncx_prod - lNck;
-      }
+      lNck = R::lchoose(n_tot, GETV(k, i));
+      p[i] = lncx_prod - lNck;
     }
+    
   }
   
   if (!log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = exp(p[i]);
+    p = Rcpp::exp(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -121,79 +109,64 @@ NumericVector cpp_dmvhyper(
 
 // [[Rcpp::export]]
 NumericMatrix cpp_rmvhyper(
-    const int nn,
+    const int& nn,
     const NumericMatrix& n,
     const NumericVector& k
   ) {
   
-  int nr = n.nrow();
   int m = n.ncol();
-  int nk = k.length();
   NumericMatrix x(nn, m);
-  NumericVector n_otr(m);
+  std::vector<double> n_otr(m);
+  
+  bool wrong_values;
+  double k_left;
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < nn; i++) {
     
-    bool missings = false;
-    
-    if (ISNAN(k[i % nk]))
-      missings = true;
-    
-    for (int j = 0; j < m; j++) {
-      if (ISNAN(n(i % nr, j))) {
-        missings = true;
-        break;
-      }
-    }
-    
-    if (missings) {
-      for (int j = 0; j < m; j++)
-        x(i, j) = NA_REAL;
-      continue;
-    } 
-    
-    bool wrong_n = false;
+    wrong_values = false;
     n_otr[0] = 0.0;
     
     for (int j = 1; j < m; j++) {
-      n_otr[0] += n(i % nr, j);
-      if (floor(n(i % nr, j)) != n(i % nr, j) || n(i % nr, j) < 0.0) {
-        wrong_n = true;
+      if (!isInteger(GETM(n, i, j), false) ||
+          GETM(n, i, j) < 0.0 || ISNAN(GETM(n, i, j))) {
+        wrong_values = true;
         break;
       }
+      n_otr[0] += GETM(n, i, j);
     }
     
-    if (floor(n(i % nr, 0)) != n(i % nr, 0) || n(i % nr, 0) < 0 ||
-        (n_otr[0] + n(i % nr, 0)) < k[i % nk]) {
-      wrong_n = true;
-    }
-    
-    if (wrong_n || floor(k[i % nk]) != k[i % nk] || k[i % nk] < 0.0) {
-      
-      Rcpp::warning("NaNs produced");
+    if (wrong_values || ISNAN(GETV(k, i)) || ISNAN(GETM(n, i, 0)) ||
+        !isInteger(GETM(n, i, 0), false) || GETM(n, i, 0) < 0 ||
+        (n_otr[0] + GETM(n, i, 0)) < GETV(k, i) ||
+        !isInteger(GETV(k, i), false) || GETV(k, i) < 0.0) {
+      throw_warning = true;
       for (int j = 0; j < m; j++)
-        x(i, j) = NAN;
-    
-    } else {
-      
-      for (int j = 1; j < m; j++)
-        n_otr[j] = n_otr[j-1] - n(i % nr, j);
-      
-      double k_left = k[i % nk];
-      x(i, 0) = R::rhyper(n(i % nr, 0), n_otr[0], k_left);
-      k_left -= x(i, 0);
-      
-      if (m > 2) {
-        for (int j = 1; j < m-1; j++) {
-          x(i, j) = R::rhyper(n(i % nr, j), n_otr[j], k_left);
-          k_left -= x(i, j);
-        }
-      }
-      
-      x(i, m-1) = k_left;
-      
+        x(i, j) = NA_REAL;
+      continue;
     }
+    
+    for (int j = 1; j < m; j++)
+      n_otr[j] = n_otr[j-1] - GETM(n, i, j);
+    
+    k_left = GETV(k, i);
+    x(i, 0) = R::rhyper(GETM(n, i, 0), n_otr[0], k_left);
+    k_left -= x(i, 0);
+    
+    if (m > 2) {
+      for (int j = 1; j < m-1; j++) {
+        x(i, j) = R::rhyper(GETM(n, i, j), n_otr[j], k_left);
+        k_left -= x(i, j);
+      }
+    }
+    
+    x(i, m-1) = k_left;
+    
   }
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
 
   return x;
 }

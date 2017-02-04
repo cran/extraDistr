@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -8,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
 /*
@@ -29,14 +24,15 @@ using Rcpp::NumericMatrix;
 *
 */
 
-double pdf_zip(double x, double lambda, double pi) {
-  if (lambda <= 0.0 || pi < 0.0 || pi > 1.0) {
-    Rcpp::warning("NaNs produced");
+inline double pdf_zip(double x, double lambda, double pi,
+                      bool& throw_warning) {
+  if (ISNAN(x) || ISNAN(lambda) || ISNAN(pi))
+    return x+lambda+pi;
+  if (lambda <= 0.0 || !VALID_PROB(pi)) {
+    throw_warning = true;
     return NAN;
   }
-  if (ISNAN(x) || ISNAN(lambda) || ISNAN(pi))
-    return NA_REAL;
-  if (x < 0.0 || !isInteger(x) || std::isinf(x))
+  if (x < 0.0 || !isInteger(x) || !R_FINITE(x))
     return 0.0;
   if (x == 0.0)
     return pi + (1.0-pi) * exp(-lambda);
@@ -44,25 +40,27 @@ double pdf_zip(double x, double lambda, double pi) {
     return (1.0-pi) * R::dpois(x, lambda, false);
 }
 
-double cdf_zip(double x, double lambda, double pi) {
+inline double cdf_zip(double x, double lambda, double pi,
+                      bool& throw_warning) {
   if (ISNAN(x) || ISNAN(lambda) || ISNAN(pi))
-    return NA_REAL;
-  if (lambda <= 0.0 || pi < 0.0 || pi > 1.0) {
-    Rcpp::warning("NaNs produced");
+    return x+lambda+pi;
+  if (lambda <= 0.0 || !VALID_PROB(pi)) {
+    throw_warning = true;
     return NAN;
   }
   if (x < 0.0)
     return 0.0;
-  if (std::isinf(x))
+  if (!R_FINITE(x))
     return 1.0;
   return pi + (1.0-pi) * R::ppois(x, lambda, true, false);
 }
 
-double invcdf_zip(double p, double lambda, double pi) {
+inline double invcdf_zip(double p, double lambda, double pi,
+                         bool& throw_warning) {
   if (ISNAN(p) || ISNAN(lambda) || ISNAN(pi))
-    return NA_REAL;
-  if (lambda <= 0.0 || pi < 0.0 || pi > 1.0 || p < 0.0 || p > 1.0) {
-    Rcpp::warning("NaNs produced");
+    return p+lambda+pi;
+  if (lambda <= 0.0 || !VALID_PROB(pi) || !VALID_PROB(p)) {
+    throw_warning = true;
     return NAN;
   }
   if (p < pi)
@@ -71,12 +69,11 @@ double invcdf_zip(double p, double lambda, double pi) {
     return R::qpois((p - pi) / (1.0-pi), lambda, true, false);
 }
 
-double rng_zip(double lambda, double pi) {
-  if (ISNAN(lambda) || ISNAN(pi))
+inline double rng_zip(double lambda, double pi, bool& throw_warning) {
+  if (ISNAN(lambda) || ISNAN(pi) ||
+      lambda <= 0.0 || !VALID_PROB(pi)) {
+    throw_warning = true;
     return NA_REAL;
-  if (lambda <= 0.0 || pi < 0.0 || pi > 1.0) {
-    Rcpp::warning("NaNs produced");
-    return NAN;
   }
   double u = rng_unif();
   if (u < pi)
@@ -91,21 +88,27 @@ NumericVector cpp_dzip(
     const NumericVector& x,
     const NumericVector& lambda,
     const NumericVector& pi,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
   
-  int n  = x.length();
-  int np = pi.length();
-  int nl = lambda.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, np, nl));
+  int Nmax = std::max({
+    x.length(),
+    lambda.length(),
+    pi.length()
+  });
   NumericVector p(Nmax);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_zip(x[i % n], lambda[i % nl], pi[i % np]);
+    p[i] = pdf_zip(GETV(x, i), GETV(lambda, i),
+                   GETV(pi, i), throw_warning);
   
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -116,25 +119,31 @@ NumericVector cpp_pzip(
     const NumericVector& x,
     const NumericVector& lambda,
     const NumericVector& pi,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
   
-  int n  = x.length();
-  int np = pi.length();
-  int nl = lambda.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, np, nl));
+  int Nmax = std::max({
+    x.length(),
+    lambda.length(),
+    pi.length()
+  });
   NumericVector p(Nmax);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < Nmax; i++)
-    p[i] = cdf_zip(x[i % n], lambda[i % nl], pi[i % np]);
+    p[i] = cdf_zip(GETV(x, i), GETV(lambda, i),
+                   GETV(pi, i), throw_warning);
   
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
+    p = 1.0 - p;
   
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -145,26 +154,32 @@ NumericVector cpp_qzip(
     const NumericVector& p,
     const NumericVector& lambda,
     const NumericVector& pi,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
   
-  int n  = p.length();
-  int np = pi.length();
-  int nl = lambda.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, np, nl));
+  int Nmax = std::max({
+    p.length(),
+    lambda.length(),
+    pi.length()
+  });
   NumericVector x(Nmax);
   NumericVector pp = Rcpp::clone(p);
   
+  bool throw_warning = false;
+  
   if (log_prob)
-    for (int i = 0; i < n; i++)
-      pp[i] = exp(pp[i]);
+    pp = Rcpp::exp(pp);
   
   if (!lower_tail)
-    for (int i = 0; i < n; i++)
-      pp[i] = 1.0 - pp[i];
+    pp = 1.0 - pp;
   
   for (int i = 0; i < Nmax; i++)
-    x[i] = invcdf_zip(pp[i % n], lambda[i % nl], pi[i % np]);
+    x[i] = invcdf_zip(GETV(pp, i), GETV(lambda, i),
+                      GETV(pi, i), throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return x;
 }
@@ -172,17 +187,21 @@ NumericVector cpp_qzip(
 
 // [[Rcpp::export]]
 NumericVector cpp_rzip(
-    const int n,
+    const int& n,
     const NumericVector& lambda,
     const NumericVector& pi
   ) {
   
-  int np = pi.length();
-  int nl = lambda.length();
   NumericVector x(n);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < n; i++)
-    x[i] = rng_zip(lambda[i % nl], pi[i % np]);
+    x[i] = rng_zip(GETV(lambda, i), GETV(pi, i),
+                   throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return x;
 }

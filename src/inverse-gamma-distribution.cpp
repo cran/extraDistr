@@ -1,4 +1,6 @@
 #include <Rcpp.h>
+#include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -7,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
 /*
@@ -34,17 +30,18 @@ using Rcpp::NumericMatrix;
 *
 */
 
-double pdf_invgamma(double x, double alpha, double beta) {
+inline double pdf_invgamma(double x, double alpha, double beta,
+                           bool& throw_warning) {
   if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta))
-    return NA_REAL;
+    return x+alpha+beta;
   if (alpha <= 0.0 || beta <= 0.0) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
-  if (x > 0.0)
-    return (pow(x, -alpha-1.0) * exp(-1.0/(beta*x))) / (R::gammafn(alpha) * pow(beta, alpha));
-  else
+  if (x <= 0.0)
     return 0.0;
+  return (pow(x, -alpha-1.0) * exp(-1.0/(beta*x))) /
+         (R::gammafn(alpha) * pow(beta, alpha));
 }
 
 
@@ -53,21 +50,27 @@ NumericVector cpp_dinvgamma(
     const NumericVector& x,
     const NumericVector& alpha,
     const NumericVector& beta,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
 
-  int n = x.length();
-  int na = alpha.length();
-  int nb = beta.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, na, nb));
+  int Nmax = std::max({
+    x.length(),
+    alpha.length(),
+    beta.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_invgamma(x[i % n], alpha[i % na], beta[i % nb]);
+    p[i] = pdf_invgamma(GETV(x, i), GETV(alpha, i),
+                        GETV(beta, i), throw_warning);
 
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }

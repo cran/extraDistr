@@ -1,6 +1,6 @@
 #include <Rcpp.h>
-#include "const.h"
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -9,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
 /*
@@ -40,36 +34,39 @@ using Rcpp::NumericMatrix;
 */
 
 
-double pdf_tnorm(double x, double mu, double sigma, double a, double b) {
+double pdf_tnorm(double x, double mu, double sigma,
+                 double a, double b, bool& throw_warning) {
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma) || ISNAN(a) || ISNAN(b))
-    return NA_REAL;
+    return x+mu+sigma+a+b;
   if (sigma <= 0.0 || b <= a) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   
-  if (a == -INFINITY && b == INFINITY)
+  if (a == R_NegInf && b == R_PosInf)
     return R::dnorm(x, mu, sigma, false);
   
   double Phi_a, Phi_b;
   if (x > a && x < b) {
     Phi_a = Phi((a-mu)/sigma);
     Phi_b = Phi((b-mu)/sigma);
-    return exp(-pow(x-mu, 2.0) / (2.0*pow(sigma, 2.0))) / (SQRT_2_PI*sigma * (Phi_b - Phi_a));
+    return exp(-pow(x-mu, 2.0) / (2.0*pow(sigma, 2.0))) /
+              (SQRT_2_PI*sigma * (Phi_b - Phi_a));
   } else {
     return 0.0;
   }
 }
 
-double cdf_tnorm(double x, double mu, double sigma, double a, double b) {
+double cdf_tnorm(double x, double mu, double sigma,
+                 double a, double b, bool& throw_warning) {
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma) || ISNAN(a) || ISNAN(b))
-    return NA_REAL;
+    return x+mu+sigma+a+b;
   if (sigma <= 0.0 || b <= a) {
-    Rcpp::warning("NaNs produced");
+    throw_warning = true;
     return NAN;
   }
   
-  if (a == -INFINITY && b == INFINITY)
+  if (a == R_NegInf && b == R_PosInf)
     return R::pnorm(x, mu, sigma, true, false);
   
   double Phi_x, Phi_a, Phi_b;
@@ -85,15 +82,16 @@ double cdf_tnorm(double x, double mu, double sigma, double a, double b) {
   }
 }
 
-double invcdf_tnorm(double p, double mu, double sigma, double a, double b) {
+double invcdf_tnorm(double p, double mu, double sigma,
+                    double a, double b, bool& throw_warning) {
   if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(a) || ISNAN(b))
-    return NA_REAL;
-  if (sigma <= 0.0 || b <= a || p < 0.0 || p > 1.0) {
-    Rcpp::warning("NaNs produced");
+    return p+mu+sigma+a+b;
+  if (sigma <= 0.0 || b <= a || !VALID_PROB(p)) {
+    throw_warning = true;
     return NAN;
   }
   
-  if (a == -INFINITY && b == INFINITY)
+  if (a == R_NegInf && b == R_PosInf)
     return R::qnorm(p, mu, sigma, true, false);
   
   double Phi_a, Phi_b;
@@ -102,16 +100,16 @@ double invcdf_tnorm(double p, double mu, double sigma, double a, double b) {
   return InvPhi(Phi_a + p * (Phi_b - Phi_a)) * sigma + mu;
 }
 
-double rng_tnorm(double mu, double sigma, double a, double b) {
-  if (ISNAN(mu) || ISNAN(sigma) || ISNAN(a) || ISNAN(b))
+double rng_tnorm(double mu, double sigma, double a,
+                 double b, bool& throw_warning) {
+  if (ISNAN(mu) || ISNAN(sigma) || ISNAN(a) || ISNAN(b) ||
+      sigma <= 0.0 || b <= a) {
+    throw_warning = true;
     return NA_REAL;
-  if (sigma <= 0.0 || b <= a) {
-    Rcpp::warning("NaNs produced");
-    return NAN;
   }
   
   // non-truncated normal
-  if (a == -INFINITY && b == INFINITY)
+  if (a == R_NegInf && b == R_PosInf)
     return R::rnorm(mu, sigma);
 
   double r, u, za, zb, aa, za_sq, zb_sq;
@@ -122,16 +120,17 @@ double rng_tnorm(double mu, double sigma, double a, double b) {
   za_sq = pow(za, 2.0);
   zb_sq = pow(zb, 2.0);
   
-  if (abs(za) <= 1e-16 && zb == INFINITY) {
+  if (abs(za) <= 1e-16 && zb == R_PosInf) {
     r = R::norm_rand();
     if (r < 0.0)
       r = -r;
-  } else if (za == INFINITY && abs(zb) <= 1e-16) {
+  } else if (za == R_PosInf && abs(zb) <= 1e-16) {
     r = R::norm_rand();
     if (r > 0.0)
       r = -r;
-  } else if ((za < 0.0 && zb == INFINITY) || (za == -INFINITY && zb > 0.0) ||
-      (za != INFINITY && zb != INFINITY &&
+  } else if ((za < 0.0 && zb == R_PosInf) ||
+      (za == R_NegInf && zb > 0.0) ||
+      (za != R_PosInf && zb != R_PosInf &&
        za < 0.0 && zb > 0.0 && zb-za > SQRT_2_PI)) {
     while (!stop) {
       r = R::norm_rand();
@@ -189,25 +188,32 @@ NumericVector cpp_dtnorm(
     const NumericVector& x,
     const NumericVector& mu,
     const NumericVector& sigma,
-    const NumericVector& a,
-    const NumericVector& b,
-    bool log_prob = false
+    const NumericVector& lower,
+    const NumericVector& upper,
+    const bool& log_prob = false
   ) {
 
-  int n  = x.length();
-  int nm = mu.length();
-  int ns = sigma.length();
-  int na = mu.length();
-  int nb = sigma.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nm, ns, na, nb));
-  NumericVector p(n);
+  int Nmax = std::max({
+    x.length(),
+    mu.length(),
+    sigma.length(),
+    lower.length(),
+    upper.length()
+  });
+  NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_tnorm(x[i % n], mu[i % nm], sigma[i % ns], a[i % na], b[i % nb]);
+    p[i] = pdf_tnorm(GETV(x, i), GETV(mu, i),
+                     GETV(sigma, i), GETV(lower, i),
+                     GETV(upper, i), throw_warning);
 
   if (log_prob)
-    for (int i = 0; i < n; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -218,29 +224,36 @@ NumericVector cpp_ptnorm(
     const NumericVector& x,
     const NumericVector& mu,
     const NumericVector& sigma,
-    const NumericVector& a,
-    const NumericVector& b,
-    bool lower_tail = true, bool log_prob = false
+    const NumericVector& lower,
+    const NumericVector& upper,
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n  = x.length();
-  int nm = mu.length();
-  int ns = sigma.length();
-  int na = mu.length();
-  int nb = sigma.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nm, ns, na, nb));
-  NumericVector p(n);
+  int Nmax = std::max({
+    x.length(),
+    mu.length(),
+    sigma.length(),
+    lower.length(),
+    upper.length()
+  });
+  NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = cdf_tnorm(x[i % n], mu[i % nm], sigma[i % ns], a[i % na], b[i % nb]);
+    p[i] = cdf_tnorm(GETV(x, i), GETV(mu, i),
+                     GETV(sigma, i), GETV(lower, i),
+                     GETV(upper, i), throw_warning);
 
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
-
+    p = 1.0 - p;
+  
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -251,52 +264,62 @@ NumericVector cpp_qtnorm(
     const NumericVector& p,
     const NumericVector& mu,
     const NumericVector& sigma,
-    const NumericVector& a,
-    const NumericVector& b,
-    bool lower_tail = true, bool log_prob = false
+    const NumericVector& lower,
+    const NumericVector& upper,
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n  = p.length();
-  int nm = mu.length();
-  int ns = sigma.length();
-  int na = mu.length();
-  int nb = sigma.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nm, ns, na, nb));
-  NumericVector q(n);
+  int Nmax = std::max({
+    p.length(),
+    mu.length(),
+    sigma.length(),
+    lower.length(),
+    upper.length()
+  });
+  NumericVector x(Nmax);
   NumericVector pp = Rcpp::clone(p);
   
+  bool throw_warning = false;
+  
   if (log_prob)
-    for (int i = 0; i < n; i++)
-      pp[i] = exp(pp[i]);
+    pp = Rcpp::exp(pp);
   
   if (!lower_tail)
-    for (int i = 0; i < n; i++)
-      pp[i] = 1.0 - pp[i];
+    pp = 1.0 - pp;
 
   for (int i = 0; i < Nmax; i++)
-    q[i] = invcdf_tnorm(pp[i % n], mu[i % nm], sigma[i % ns], a[i % na], b[i % nb]);
+    x[i] = invcdf_tnorm(GETV(pp, i), GETV(mu, i),
+                        GETV(sigma, i), GETV(lower, i),
+                        GETV(upper, i), throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
-  return q;
+  return x;
 }
 
 
 // [[Rcpp::export]]
 NumericVector cpp_rtnorm(
-    const int n,
+    const int& n,
     const NumericVector& mu,
     const NumericVector& sigma,
-    const NumericVector& a,
-    const NumericVector& b
+    const NumericVector& lower,
+    const NumericVector& upper
   ) {
 
-  int nm = mu.length();
-  int ns = sigma.length();
-  int na = mu.length();
-  int nb = sigma.length();
   NumericVector x(n);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < n; i++)
-    x[i] = rng_tnorm(mu[i % nm], sigma[i % ns], a[i % na], b[i % nb]);
+    x[i] = rng_tnorm(GETV(mu, i), GETV(sigma, i),
+                     GETV(lower, i), GETV(upper, i),
+                     throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
 
   return x;
 }

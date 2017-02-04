@@ -1,6 +1,6 @@
 #include <Rcpp.h>
-#include "const.h"
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -9,13 +9,7 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
 /*
@@ -33,11 +27,12 @@ using Rcpp::NumericMatrix;
 *
 */
 
-double pmf_bbinom(double k, double n, double alpha, double beta) {
+inline double pmf_bbinom(double k, double n, double alpha,
+                         double beta, bool& throw_warning) {
   if (ISNAN(k) || ISNAN(n) || ISNAN(alpha) || ISNAN(beta))
-    return NA_REAL;
-  if (alpha < 0.0 || beta < 0.0 || n < 0.0 || floor(n) != n) {
-    Rcpp::warning("NaNs produced");
+    return k+n+alpha+beta;
+  if (alpha < 0.0 || beta < 0.0 || n < 0.0 || !isInteger(n, false)) {
+    throw_warning = true;
     return NAN;
   }
   if (!isInteger(k) || k < 0.0 || k > n)
@@ -45,41 +40,73 @@ double pmf_bbinom(double k, double n, double alpha, double beta) {
   return R::choose(n, k) * R::beta(k+alpha, n-k+beta) / R::beta(alpha, beta);
 }
 
-double logpmf_bbinom(double k, double n, double alpha, double beta) {
+inline double logpmf_bbinom(double k, double n, double alpha,
+                            double beta, bool& throw_warning) {
   if (ISNAN(k) || ISNAN(n) || ISNAN(alpha) || ISNAN(beta))
-    return NA_REAL;
-  if (alpha < 0.0 || beta < 0.0 || n < 0.0 || floor(n) != n) {
-    Rcpp::warning("NaNs produced");
+    return k+n+alpha+beta;
+  if (alpha < 0.0 || beta < 0.0 || n < 0.0 || !isInteger(n, false)) {
+    throw_warning = true;
     return NAN;
   }
   if (!isInteger(k) || k < 0.0 || k > n)
-    return -INFINITY;
+    return R_NegInf;
   return R::lchoose(n, k) + R::lbeta(k+alpha, n-k+beta) - R::lbeta(alpha, beta);
 }
 
-double cdf_bbinom(double k, double n, double alpha, double beta) {
-  if (ISNAN(k) || ISNAN(n) || ISNAN(alpha) || ISNAN(beta))
-    return NA_REAL;
-  if (alpha < 0.0 || beta < 0.0 || n < 0.0 || floor(n) != n) {
-    Rcpp::warning("NaNs produced");
-    return NAN;
+inline std::vector<double> cdf_bbinom_table(double k, double n,
+                                            double alpha, double beta) {
+  
+  if (k < 0.0 || k > n || alpha < 0.0 || beta < 0.0)
+    Rcpp::stop("inadmissible values");
+
+  int ik = to_pos_int(k);
+  std::vector<double> p_tab(ik+1);
+  double nck, bab, gx, gy, gxy;
+  
+  bab = R::lbeta(alpha, beta);
+  gxy = R::lgammafn(alpha + beta + n);
+  
+  // k = 0
+  
+  nck = 0.0;
+  gx = R::lgammafn(alpha);
+  gy = R::lgammafn(beta + n);
+  p_tab[0] = exp(nck + gx + gy - gxy - bab);
+  
+  if (ik < 1)
+    return p_tab;
+  
+  // k < 2
+  
+  nck += log(n);
+  gx += log(alpha);
+  gy -= log(n + beta - 1.0);
+  p_tab[1] = p_tab[0] + exp(nck + gx + gy - gxy - bab);
+  
+  if (ik < 2)
+    return p_tab;
+  
+  // k >= 1
+  
+  double dj;
+  
+  for (int j = 2; j <= ik; j++) {
+    dj = to_dbl(j);
+    nck += log((n + 1.0 - dj)/dj);
+    gx += log(dj + alpha - 1.0);
+    gy -= log(n + beta - dj);
+    p_tab[j] = p_tab[j-1] + exp(nck + gx + gy - gxy - bab);
   }
-  if (k < 0.0)
-    return 0.0;
-  if (k > n)
-    return 1.0;
-  double p_tmp = 0.0;
-  for (int j = 0; j < static_cast<int>(floor(k))+1; j++)
-    p_tmp += exp(logpmf_bbinom(static_cast<double>(j), n, alpha, beta));
-  return p_tmp;
+  
+  return p_tab;
 }
 
-double rng_bbinom(double n, double alpha, double beta) {
-  if (ISNAN(n) || ISNAN(alpha) || ISNAN(beta))
+inline double rng_bbinom(double n, double alpha,
+                         double beta, bool& throw_warning) {
+  if (ISNAN(n) || ISNAN(alpha) || ISNAN(beta) ||
+      alpha < 0.0 || beta < 0.0 || n < 0.0 || !isInteger(n, false)) {
+    throw_warning = true;
     return NA_REAL;
-  if (alpha < 0.0 || beta < 0.0 || n < 0.0 || floor(n) != n) {
-    Rcpp::warning("NaNs produced");
-    return NAN;
   }
   double prob = R::rbeta(alpha, beta);
   return R::rbinom(n, prob);
@@ -92,22 +119,29 @@ NumericVector cpp_dbbinom(
     const NumericVector& size,
     const NumericVector& alpha,
     const NumericVector& beta,
-    bool log_prob = false
+    const bool& log_prob = false
   ) {
 
-  int n = x.length();
-  int nn = size.length();
-  int na = alpha.length();
-  int nb = beta.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nn, na, nb));
+  int Nmax = std::max({
+    x.length(),
+    size.length(),
+    alpha.length(),
+    beta.length()
+  });
   NumericVector p(Nmax);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = logpmf_bbinom(x[i % n], size[i % nn], alpha[i % na], beta[i % nb]);
+    p[i] = logpmf_bbinom(GETV(x, i), GETV(size, i),
+                         GETV(alpha, i), GETV(beta, i),
+                         throw_warning);
 
   if (!log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = exp(p[i]);
+    p = Rcpp::exp(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -119,73 +153,63 @@ NumericVector cpp_pbbinom(
     const NumericVector& size,
     const NumericVector& alpha,
     const NumericVector& beta,
-    bool lower_tail = true, bool log_prob = false
+    const bool& lower_tail = true,
+    const bool& log_prob = false
   ) {
 
-  int n = x.length();
-  int nn = size.length();
-  int na = alpha.length();
-  int nb = beta.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nn, na, nb));
+  int Nmax = std::max({
+    x.length(),
+    size.length(),
+    alpha.length(),
+    beta.length()
+  });
   NumericVector p(Nmax);
   
-  if (nn == 1 && na == 1 && nb == 1) {
-    
-    if (ISNAN(alpha[0]) || ISNAN(beta[0]) || ISNAN(size[0]) || allNA(x)) {
-      for (int i = 0; i < n; i++)
-        p[i] = NA_REAL;
-      return p;
-    }
-    
-    if (alpha[0] < 0.0 || beta[0] < 0.0 || size[0] < 0.0 ||
-        floor(size[0]) != size[0]) {
-      Rcpp::warning("NaNs produced");
-      for (int i = 0; i < n; i++)
-        p[i] = NAN;
-      return p;
-    }
-    
-    double mx = finite_max(x);
-    mx = static_cast<int>(std::max(mx, size[0]));
-    if (mx < 0.0) {
-      for (int i = 0; i < n; i++)
-        p[i] = 0;
-      return p;
-    }
-    NumericVector p_tab(mx+1);
-    
-    p_tab[0] = exp(logpmf_bbinom(0.0, size[0], alpha[0], beta[0]));
-    for (int j = 1; j < mx+1; j++)
-      p_tab[j] = p_tab[j-1] + exp(logpmf_bbinom(static_cast<double>(j),
-                                                size[0], alpha[0], beta[0]));
-    
-    for (int i = 0; i < n; i++) {
-      if (x[i] > size[0]) {
-        p[i] = 1.0;
-      } else if (x[i] >= 0.0) {
-        p[i] = p_tab[static_cast<int>(floor(x[i]))];
-      } else {
-        p[i] = 0.0;
-      }
-    }
-    
-  } else {
-    
-    for (int i = 0; i < Nmax; i++) {
-      if (i % 1000 == 0)
-        Rcpp::checkUserInterrupt();
-      p[i] = cdf_bbinom(x[i % n], size[i % nn], alpha[i % na], beta[i % nb]);
-    }
+  bool throw_warning = false;
   
+  std::map<std::tuple<int, int, int>, std::vector<double>> memo;
+  double mx = std::min(finite_max_int(x), finite_max_int(size));
+  
+  for (int i = 0; i < Nmax; i++) {
+    
+    if (i % 1000 == 0)
+      Rcpp::checkUserInterrupt();
+    
+    if (ISNAN(GETV(x, i)) || ISNAN(GETV(size, i)) ||
+        ISNAN(GETV(alpha, i)) || ISNAN(GETV(beta, i))) {
+      p[i] = GETV(x, i) + GETV(size, i) + GETV(alpha, i) + GETV(beta, i);
+    } else if (GETV(alpha, i) <= 0.0 || GETV(beta, i) <= 0.0 ||
+               GETV(size, i) < 0.0 || !isInteger(GETV(size, i), false)) {
+      throw_warning = true;
+      p[i] = NAN;
+    } else if (GETV(x, i) < 0.0) {
+      p[i] = 0.0;
+    } else if (GETV(x, i) >= GETV(size, i)) {
+      p[i] = 1.0;
+    } else if (is_large_int(GETV(x, i))) {
+      p[i] = NA_REAL;
+      Rcpp::warning("NAs introduced by coercion to integer range");
+    } else {
+      
+      std::vector<double>& tmp = memo[std::make_tuple(i % size.length(),
+                                                      i % alpha.length(),
+                                                      i % beta.length())];
+      if (!tmp.size()) {
+        tmp = cdf_bbinom_table(mx, GETV(size, i), GETV(alpha, i), GETV(beta, i));
+      }
+      p[i] = tmp[to_pos_int(GETV(x, i))];
+      
+    }
   }
 
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
-
+    p = 1.0 - p;
+  
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
 
   return p;
 }
@@ -193,19 +217,22 @@ NumericVector cpp_pbbinom(
 
 // [[Rcpp::export]]
 NumericVector cpp_rbbinom(
-    const int n,
+    const int& n,
     const NumericVector& size,
     const NumericVector& alpha,
     const NumericVector& beta
   ) {
 
-  int nn = size.length();
-  int na = alpha.length();
-  int nb = beta.length();
   NumericVector x(n);
+  
+  bool throw_warning = false;
 
   for (int i = 0; i < n; i++)
-    x[i] = rng_bbinom(size[i % nn], alpha[i % na], beta[i % nb]);
+    x[i] = rng_bbinom(GETV(size, i), GETV(alpha, i), GETV(beta, i),
+                      throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
 
   return x;
 }

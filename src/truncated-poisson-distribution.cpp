@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -8,103 +9,89 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
-using Rcpp::NumericMatrix;
 
 
-double pdf_tpois(double x, double lambda, double s) {
-  if (ISNAN(x) || ISNAN(lambda) || ISNAN(s))
-    return NA_REAL;
-  if (lambda < 0.0 || s < 0.0) {
-    Rcpp::warning("NaNs produced");
+inline double pdf_tpois(double x, double lambda, double a,
+                        double b, bool& throw_warning) {
+  if (ISNAN(x) || ISNAN(lambda) || ISNAN(a) || ISNAN(b))
+    return x+lambda+a+b;
+  if (lambda < 0.0 || b < a) {
+    throw_warning = true;
     return NAN;
   }
-  if (!isInteger(x) || x < 0.0 || std::isinf(x))
+  
+  if (!isInteger(x) || x < 0.0 || x <= a || x > b || !R_FINITE(x))
     return 0.0;
   
-  if (s == 0.0 && x <= s)
-    return 0.0;
-  if (s > 0.0 && x > s)
-    return 0.0;
-  if (s == 0.0)
-    return pow(lambda, x) / (factorial(x) * (exp(lambda) - 1.0));
-  return R::dpois(x, lambda, false) / R::ppois(s, lambda, true, false);
+  // if (a == 0.0 && b == R_PosInf)
+  //   return pow(lambda, x) / (factorial(x) * (exp(lambda) - 1.0));
+  
+  double pa, pb;
+  pa = R::ppois(a, lambda, true, false);
+  pb = R::ppois(b, lambda, true, false);
+  
+  return R::dpois(x, lambda, false) / (pb-pa);
 }
 
-double cdf_tpois(double x, double lambda, double s) {
-  if (ISNAN(x) || ISNAN(lambda) || ISNAN(s))
-    return NA_REAL;
-  if (lambda <= 0.0 || s < 0.0) {
-    Rcpp::warning("NaNs produced");
+inline double cdf_tpois(double x, double lambda, double a,
+                        double b, bool& throw_warning) {
+  if (ISNAN(x) || ISNAN(lambda) || ISNAN(a) || ISNAN(b))
+    return x+lambda+a+b;
+  if (lambda <= 0.0 || b < a) {
+    throw_warning = true;
     return NAN;
   }
   
-  if (x < 0.0)
+  if (x < 0.0 || x <= a)
     return 0.0;
-  if (x == INFINITY)
+  if (x > b || !R_FINITE(x))
     return 1.0;
   
-  if (s == 0.0 && x <= s)
-    return 0.0;
-  if (s > 0.0 && x > s)
-    return 1.0;
-  if (s == 0.0)
-    return R::ppois(x, lambda, true, false) / (1.0 - exp(-lambda));
-  return R::ppois(x, lambda, true, false) / R::ppois(s, lambda, true, false);
+  // if (a == 0.0 && b == R_PosInf)
+  //   return R::ppois(x, lambda, true, false) / (1.0 - exp(-lambda));
+  
+  double pa, pb;
+  pa = R::ppois(a, lambda, true, false);
+  pb = R::ppois(b, lambda, true, false);
+
+  return (R::ppois(x, lambda, true, false) - pa) / (pb-pa);
 }
 
-double invcdf_tpois(double p, double lambda, double s) {
-  if (ISNAN(p) || ISNAN(lambda) || ISNAN(s))
-    return NA_REAL;
-  if (lambda < 0.0 || s < 0.0 || p < 0.0 || p > 1.0) {
-    Rcpp::warning("NaNs produced");
+inline double invcdf_tpois(double p, double lambda, double a,
+                           double b, bool& throw_warning) {
+  if (ISNAN(p) || ISNAN(lambda) || ISNAN(a) || ISNAN(b))
+    return p+lambda+a+b;
+  if (lambda < 0.0 || b < a || !VALID_PROB(p)) {
+    throw_warning = true;
     return NAN;
-  }
-
-  double z;
-  
-  if (s == 0.0) {
-    if (p == 0.0)
-      return 0.0;
-    if (p == 1.0)
-      return INFINITY;
-    
-    z = exp(-lambda);
-    return R::qpois(p*(1.0-z) + z, lambda, true, false);
   }
 
   if (p == 0.0)
-    return 0.0;
+    return std::max(a, 0.0);
   if (p == 1.0)
-    return s;
+    return b;
   
-  z = R::ppois(s, lambda, true, false);
-  return R::qpois(p*z, lambda, true, false);
+  double pa, pb;
+  pa = R::ppois(a, lambda, true, false);
+  pb = R::ppois(b, lambda, true, false);
+  
+  return R::qpois(pa + p*(pb-pa), lambda, true, false);
 }
 
-double rng_tpois(double lambda, double s) {
-  if (ISNAN(lambda) || ISNAN(s))
+inline double rng_tpois(double lambda, double a, double b,
+                        bool& throw_warning) {
+  if (ISNAN(lambda) || ISNAN(a) || ISNAN(b) ||
+      lambda < 0.0 || b < a) {
+    throw_warning = true;
     return NA_REAL;
-  if (lambda < 0.0 || s < 0.0) {
-    Rcpp::warning("NaNs produced");
-    return NAN;
   }
 
-  double z, u;
+  double u, pa, pb;
+  pa = R::ppois(a, lambda, true, false);
+  pb = R::ppois(b, lambda, true, false);
   
-  if (s == 0.0) {
-    z = exp(-lambda);
-    u = R::runif(z, 1.0);
-    return R::qpois(u, lambda, true, false);
-  }
-  
-  z = R::ppois(s, lambda, true, false);
-  u = R::runif(0.0, z);
+  u = R::runif(pa, pb);
   return R::qpois(u, lambda, true, false);
 }
 
@@ -113,22 +100,31 @@ double rng_tpois(double lambda, double s) {
 NumericVector cpp_dtpois(
     const NumericVector& x,
     const NumericVector& lambda,
-    const NumericVector& s,
-    bool log_prob = false
-) {
+    const NumericVector& lower,
+    const NumericVector& upper,
+    const bool& log_prob = false
+  ) {
   
-  int n  = x.length();
-  int nl = lambda.length();
-  int ns = s.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nl, ns));
+  int Nmax = std::max({
+    x.length(),
+    lambda.length(),
+    lower.length(),
+    upper.length()
+  });
   NumericVector p(Nmax);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_tpois(x[i % n], lambda[i % nl], s[i % ns]);
+    p[i] = pdf_tpois(GETV(x, i), GETV(lambda, i),
+                     GETV(lower, i), GETV(upper, i),
+                     throw_warning);
   
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -138,26 +134,35 @@ NumericVector cpp_dtpois(
 NumericVector cpp_ptpois(
     const NumericVector& x,
     const NumericVector& lambda,
-    const NumericVector& s,
-    bool lower_tail = true, bool log_prob = false
-) {
+    const NumericVector& lower,
+    const NumericVector& upper,
+    const bool& lower_tail = true,
+    const bool& log_prob = false
+  ) {
   
-  int n  = x.length();
-  int nl = lambda.length();
-  int ns = s.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nl, ns));
+  int Nmax = std::max({
+    x.length(),
+    lambda.length(),
+    lower.length(),
+    upper.length()
+  });
   NumericVector p(Nmax);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < Nmax; i++)
-    p[i] = cdf_tpois(x[i % n], lambda[i % nl], s[i % ns]);
+    p[i] = cdf_tpois(GETV(x, i), GETV(lambda, i),
+                     GETV(lower, i), GETV(upper, i),
+                     throw_warning);
   
   if (!lower_tail)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = 1.0 - p[i];
+    p = 1.0 - p;
   
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -167,45 +172,59 @@ NumericVector cpp_ptpois(
 NumericVector cpp_qtpois(
     const NumericVector& p,
     const NumericVector& lambda,
-    const NumericVector& s,
-    bool lower_tail = true, bool log_prob = false
-) {
+    const NumericVector& lower,
+    const NumericVector& upper,
+    const bool& lower_tail = true,
+    const bool& log_prob = false
+  ) {
   
-  int n  = p.length();
-  int nl = lambda.length();
-  int ns = s.length();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nl, ns));
-  NumericVector q(Nmax);
+  int Nmax = std::max({
+    p.length(),
+    lambda.length(),
+    lower.length(),
+    upper.length()
+  });
+  NumericVector x(Nmax);
   NumericVector pp = Rcpp::clone(p);
   
+  bool throw_warning = false;
+  
   if (log_prob)
-    for (int i = 0; i < n; i++)
-      pp[i] = exp(pp[i]);
+    pp = Rcpp::exp(pp);
   
   if (!lower_tail)
-    for (int i = 0; i < n; i++)
-      pp[i] = 1.0 - pp[i];
+    pp = 1.0 - pp;
   
   for (int i = 0; i < Nmax; i++)
-    q[i] = invcdf_tpois(pp[i % n], lambda[i % nl], s[i % ns]);
+    x[i] = invcdf_tpois(GETV(pp, i), GETV(lambda, i),
+                        GETV(lower, i), GETV(upper, i),
+                        throw_warning);
   
-  return q;
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
+  
+  return x;
 }
 
 
 // [[Rcpp::export]]
 NumericVector cpp_rtpois(
-    const int n,
+    const int& n,
     const NumericVector& lambda,
-    const NumericVector& s
-) {
+    const NumericVector& lower,
+    const NumericVector& upper
+  ) {
   
-  int nl = lambda.length();
-  int ns = s.length();
   NumericVector x(n);
   
+  bool throw_warning = false;
+  
   for (int i = 0; i < n; i++)
-    x[i] = rng_tpois(lambda[i % nl], s[i % ns]);
+    x[i] = rng_tpois(GETV(lambda, i), GETV(lower, i),
+                     GETV(upper, i), throw_warning);
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
   
   return x;
 }

@@ -1,6 +1,6 @@
 #include <Rcpp.h>
-#include "const.h"
 #include "shared.h"
+// [[Rcpp::plugins(cpp11)]]
 
 using std::pow;
 using std::sqrt;
@@ -9,11 +9,6 @@ using std::exp;
 using std::log;
 using std::floor;
 using std::ceil;
-using std::sin;
-using std::cos;
-using std::tan;
-using std::atan;
-using Rcpp::IntegerVector;
 using Rcpp::NumericVector;
 using Rcpp::NumericMatrix;
 
@@ -23,58 +18,67 @@ NumericVector cpp_dmixpois(
     const NumericVector& x,
     const NumericMatrix& lambda,
     const NumericMatrix& alpha,
-    bool log_prob = false
-) {
+    const bool& log_prob = false
+  ) {
   
-  int n  = x.length();
-  int nl = lambda.nrow();
-  int na = alpha.nrow();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nl, na));
+  int Nmax = std::max({
+    static_cast<int>(x.length()),
+    static_cast<int>(lambda.nrow()),
+    static_cast<int>(alpha.nrow())
+  });
   int k = alpha.ncol();
   NumericVector p(Nmax);
   
-  if (k != lambda.ncol())
-    Rcpp::stop("sizes of 'lambda' and 'alpha' do not match");
+  bool throw_warning = false;
   
-  bool wrong_param, missings;
-  double alpha_tot;
+  if (k != lambda.ncol())
+    Rcpp::stop("sizes of lambda and alpha do not match");
+  
+  bool wrong_param;
+  double alpha_tot, nans_sum;
   
   for (int i = 0; i < Nmax; i++) {
     wrong_param = false;
     alpha_tot = 0.0;
+    nans_sum = 0.0;
     p[i] = 0.0;
-    missings = false;
     
     for (int j = 0; j < k; j++) {
-      if (ISNAN(alpha(i % na, j)) || ISNAN(lambda(i % nl, j))) {
-        missings = true;
-        break;
-      }
-      if (alpha(i % na, j) < 0.0 || lambda(i % nl, j) < 0.0) {
+      if (GETM(alpha, i, j) < 0.0 || GETM(lambda, i, j) < 0.0) {
         wrong_param = true;
         break;
       }
-      alpha_tot += alpha(i % na, j);
+      nans_sum += GETM(lambda, i, j);
+      alpha_tot += GETM(alpha, i, j);
     }
     
-    if (missings || ISNAN(x[i])) {
-      p[i] = NA_REAL;
+    if (ISNAN(nans_sum + alpha_tot + GETV(x, i))) {
+      p[i] = nans_sum + alpha_tot + GETV(x, i);
       continue;
     }
     
     if (wrong_param) {
-      Rcpp::warning("NaNs produced");
+      throw_warning = true;
       p[i] = NAN;
       continue;
     }
     
-    for (int j = 0; j < k; j++)
-      p[i] += (alpha(i % na, j) / alpha_tot) * R::dpois(x[i], lambda(i % nl, j), false);
+    if (GETV(x, i) < 0.0 || !isInteger(GETV(x, i))) {
+      p[i] = 0.0;
+      continue;
+    }
+    
+    for (int j = 0; j < k; j++) {
+      p[i] += (GETM(alpha, i, j) / alpha_tot) *
+        R::dpois(GETV(x, i), GETM(lambda, i, j), false);
+    }
   }
   
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -85,58 +89,71 @@ NumericVector cpp_pmixpois(
     const NumericVector& x,
     const NumericMatrix& lambda,
     const NumericMatrix& alpha,
-    bool lower_tail = true, bool log_prob = false
-) {
+    const bool& lower_tail = true,
+    const bool& log_prob = false
+  ) {
   
-  int n  = x.length();
-  int nl = lambda.nrow();
-  int na = alpha.nrow();
-  int Nmax = Rcpp::max(IntegerVector::create(n, nl, na));
+  int Nmax = std::max({
+    static_cast<int>(x.length()),
+    static_cast<int>(lambda.nrow()),
+    static_cast<int>(alpha.nrow())
+  });
   int k = alpha.ncol();
   NumericVector p(Nmax);
   
-  if (k != lambda.ncol())
-    Rcpp::stop("sizes of 'lambda' and 'alpha' do not match");
+  bool throw_warning = false;
   
-  bool wrong_param, missings;
-  double alpha_tot;
+  if (k != lambda.ncol())
+    Rcpp::stop("sizes of lambda and alpha do not match");
+  
+  bool wrong_param;
+  double alpha_tot, nans_sum;
   
   for (int i = 0; i < Nmax; i++) {
     wrong_param = false;
     alpha_tot = 0.0;
+    nans_sum = 0.0;
     p[i] = 0.0;
-    missings = false;
     
     for (int j = 0; j < k; j++) {
-      if (ISNAN(alpha(i % na, j)) || ISNAN(lambda(i % nl, j))) {
-        missings = true;
-        break;
-      }
-      if (alpha(i % na, j) < 0.0 || lambda(i % nl, j) < 0.0) {
+      if (GETM(alpha, i, j) < 0.0 || GETM(lambda, i, j) < 0.0) {
         wrong_param = true;
         break;
       }
-      alpha_tot += alpha(i % na, j);
+      nans_sum += GETM(lambda, i, j);
+      alpha_tot += GETM(alpha, i, j);
     }
     
-    if (missings || ISNAN(x[i])) {
-      p[i] = NA_REAL;
+    if (ISNAN(nans_sum + alpha_tot + GETV(x, i))) {
+      p[i] = nans_sum + alpha_tot + GETV(x, i);
       continue;
     }
     
     if (wrong_param) {
-      Rcpp::warning("NaNs produced");
+      throw_warning = true;
       p[i] = NAN;
       continue;
     }
     
-    for (int j = 0; j < k; j++)
-      p[i] += (alpha(i % na, j) / alpha_tot) * R::ppois(x[i], lambda(i % nl, j), lower_tail, false);
+    if (GETV(x, i) < 0.0) {
+      p[i] = 0.0;
+      continue;
+    }
+    
+    for (int j = 0; j < k; j++) {
+      p[i] += (GETM(alpha, i, j) / alpha_tot) *
+        R::ppois(GETV(x, i), GETM(lambda, i, j), true, false);
+    }
   }
   
+  if (!lower_tail)
+    p = 1.0 - p;
+  
   if (log_prob)
-    for (int i = 0; i < Nmax; i++)
-      p[i] = log(p[i]);
+    p = Rcpp::log(p);
+  
+  if (throw_warning)
+    Rcpp::warning("NaNs produced");
   
   return p;
 }
@@ -144,22 +161,22 @@ NumericVector cpp_pmixpois(
 
 // [[Rcpp::export]]
 NumericVector cpp_rmixpois(
-    const int n,
+    const int& n,
     const NumericMatrix& lambda,
     const NumericMatrix& alpha
-) {
+  ) {
   
-  int nl = lambda.nrow();
-  int na = alpha.nrow();
   int k = alpha.ncol();
   NumericVector x(n);
   
+  bool throw_warning = false;
+  
   if (k != lambda.ncol())
-    Rcpp::stop("sizes of 'lambda' and 'alpha' do not match");
+    Rcpp::stop("sizes of lambda and alpha do not match");
   
   int jj;
-  bool wrong_param, missings;
-  double u, p_tmp, alpha_tot;
+  bool wrong_param;
+  double u, p_tmp, alpha_tot, nans_sum;
   NumericVector prob(k);
   
   for (int i = 0; i < n; i++) {
@@ -168,41 +185,36 @@ NumericVector cpp_rmixpois(
     u = rng_unif();
     p_tmp = 1.0;
     alpha_tot = 0.0;
-    missings = false;
+    nans_sum = 0.0;
     
     for (int j = 0; j < k; j++) {
-      if (ISNAN(alpha(i % na, j)) || ISNAN(lambda(i % nl, j))) {
-        missings = true;
-        break;
-      }
-      if (alpha(i % na, j) < 0.0 || lambda(i % nl, j) < 0.0) {
+      if (GETM(alpha, i, j) < 0.0 || GETM(lambda, i, j) < 0.0) {
         wrong_param = true;
         break;
       }
-      alpha_tot += alpha(i % na, j);
+      nans_sum += GETM(lambda, i, j);
+      alpha_tot += GETM(alpha, i, j);
     }
     
-    if (missings || ISNAN(x[i])) {
+    if (ISNAN(nans_sum + alpha_tot) || wrong_param) {
+      throw_warning = true;
       x[i] = NA_REAL;
       continue;
     }
     
-    if (wrong_param) {
-      Rcpp::warning("NaNs produced");
-      x[i] = NAN;
-      continue;
-    }
-    
     for (int j = k-1; j >= 0; j--) {
-      p_tmp -= alpha(i % na, j) / alpha_tot;
+      p_tmp -= GETM(alpha, i, j) / alpha_tot;
       if (u > p_tmp) {
         jj = j;
         break;
       }
     }
     
-    x[i] = R::rpois(lambda(i % nl, jj)); 
+    x[i] = R::rpois(GETM(lambda, i, jj)); 
   }
+  
+  if (throw_warning)
+    Rcpp::warning("NAs produced");
   
   return x;
 }
