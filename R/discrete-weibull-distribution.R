@@ -71,7 +71,10 @@
 #' @name DiscreteWeibull
 #' @aliases DiscreteWeibull
 #' @aliases ddweibull
+#' 
 #' @keywords distribution
+#' @concept Univariate
+#' @concept Discrete
 #'
 #' @export
 

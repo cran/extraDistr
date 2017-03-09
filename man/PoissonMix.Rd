@@ -65,4 +65,9 @@ plot(ecdf(x))
 lines(xx, pmixpois(xx, c(5, 12, 19), c(1/3, 1/3, 1/3)), col = "red", lwd = 2)
 
 }
+\concept{
+Univariate
+
+Discrete
+}
 \keyword{distribution}

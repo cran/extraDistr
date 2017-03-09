@@ -40,7 +40,10 @@
 #' @name Dirichlet
 #' @aliases Dirichlet
 #' @aliases ddirichlet
+#' 
 #' @keywords distribution
+#' @concept Multivariate
+#' @concept Continuous
 #' 
 #' @export
 

@@ -58,6 +58,11 @@
 #' @name LogSeries
 #' @aliases LogSeries
 #' @aliases dlgser
+#' 
+#' @keywords distribution
+#' @concept Univariate
+#' @concept Discrete
+#' 
 #' @export
 
 dlgser <- function(x, theta, log = FALSE) {

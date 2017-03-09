@@ -33,7 +33,10 @@
 #' @name TruncBinom
 #' @aliases TruncBinom
 #' @aliases dtbinom
+#' 
 #' @keywords distribution
+#' @concept Univariate
+#' @concept Discrete
 #'
 #' @export
 

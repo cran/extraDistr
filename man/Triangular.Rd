@@ -79,12 +79,11 @@ Stein and Keblis (2009) is used.
 \examples{
 
 x <- rtriang(1e5, 5, 7, 6)
-xx <- seq(-10, 10, by = 0.001)
 hist(x, 100, freq = FALSE)
-lines(xx, dtriang(xx, 5, 7, 6), col = "red")
+curve(dtriang(x, 5, 7, 6), 3, 10, n = 500, col = "red", add = TRUE)
 hist(ptriang(x, 5, 7, 6))
 plot(ecdf(x))
-lines(xx, ptriang(xx, 5, 7, 6), col = "red", lwd = 2)
+curve(ptriang(x, 5, 7, 6), 3, 10, n = 500, col = "red", lwd = 2, add = TRUE)
 
 }
 \references{
@@ -94,5 +93,10 @@ Statistical Distributions. John Wiley & Sons.
 Stein, W. E., & Keblis, M. F. (2009).
 A new method to simulate the triangular distribution.
 Mathematical and computer modelling, 49(5), 1143-1147.
+}
+\concept{
+Univariate
+
+Continuous
 }
 \keyword{distribution}

@@ -48,4 +48,9 @@ Naval Research Logistics, 48, 1-17.
 \seealso{
 \code{\link{Dirichlet}}, \code{\link{Multinomial}}
 }
+\concept{
+Multivariate
+
+Discrete
+}
 \keyword{distribution}

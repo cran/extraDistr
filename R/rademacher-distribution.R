@@ -11,8 +11,9 @@
 #' @name Rademacher
 #' @aliases Rademacher
 #' @aliases rsign
-#' @keywords distribution
 #'
+#' @keywords distribution
+#' 
 #' @export
 
 rsign <- function(n) {

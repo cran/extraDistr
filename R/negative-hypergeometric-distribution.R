@@ -83,7 +83,10 @@
 #' @name NegHyper
 #' @aliases NegHyper
 #' @aliases dnhyper
+#' 
 #' @keywords distribution
+#' @concept Univariate
+#' @concept Discrete
 #'
 #' @export
 

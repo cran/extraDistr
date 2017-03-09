@@ -88,4 +88,9 @@ IEEE Transactions on Reliability, 38(3), 348-350.
 \seealso{
 \code{\link[stats]{Weibull}}
 }
+\concept{
+Univariate
+
+Discrete
+}
 \keyword{distribution}

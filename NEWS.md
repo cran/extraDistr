@@ -1,3 +1,18 @@
+
+### 1.8.4
+
+* Random generation from categorical distribution parametrized by
+  log-probabilities `rcatlp`
+* Re-parametrized beta distribution is now more flexible since
+  "prior" parameter was introduced (see documentation); this change
+  is connected to switching to different prior equal to zero
+  (instead of one as previously). Such parametrization is more
+  commonly used in the literature. This change is documented in
+  the `?PropBeta` documentation
+* Improvements in documentation and examples
+* Fixed bugs in `pbbinom`, `pbnbinom`, `pgpois`, `*nhyper` that
+  prevented compiling on RedHat Linux (#2)
+
 ### 1.8.3
 
 * Switched to C++11, underlying code was simplified and improved

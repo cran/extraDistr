@@ -49,7 +49,10 @@
 #' @name PoissonMix
 #' @aliases PoissonMix
 #' @aliases dmixpois
+#' 
 #' @keywords distribution
+#' @concept Univariate
+#' @concept Discrete
 #'
 #' @export
 

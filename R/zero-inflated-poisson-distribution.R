@@ -43,7 +43,10 @@
 #' @name ZIP
 #' @aliases ZIP
 #' @aliases dzip
+#' 
 #' @keywords distribution
+#' @concept Univariate
+#' @concept Discrete
 #'
 #' @export
 

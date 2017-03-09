@@ -38,7 +38,10 @@
 #' @name DirMnom
 #' @aliases DirMnom
 #' @aliases ddirmnom
+#' 
 #' @keywords distribution
+#' @concept Multivariate
+#' @concept Discrete
 #' 
 #' @export
 

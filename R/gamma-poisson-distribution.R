@@ -67,7 +67,10 @@
 #' @name GammaPoiss
 #' @aliases GammaPoiss
 #' @aliases dgpois
+#' 
 #' @keywords distribution
+#' @concept Univariate
+#' @concept Discrete
 #'
 #' @export
 

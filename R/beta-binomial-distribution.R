@@ -75,7 +75,10 @@
 #' @name BetaBinom
 #' @aliases BetaBinom
 #' @aliases dbbinom
+#' 
 #' @keywords distribution
+#' @concept Univariate
+#' @concept Discrete
 #'
 #' @export
 

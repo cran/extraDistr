@@ -63,7 +63,10 @@
 #' @name TuckeyLambda
 #' @aliases TuckeyLambda
 #' @aliases qtlambda
+#' 
 #' @keywords distribution
+#' @concept Univariate
+#' @concept Continuous
 #'
 #' @export
 
