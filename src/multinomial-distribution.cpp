@@ -33,6 +33,14 @@ NumericVector cpp_dmnom(
     const bool& log_prob = false
   ) {
   
+  if (std::min({static_cast<int>(x.nrow()),
+                static_cast<int>(x.ncol()),
+                static_cast<int>(size.length()),
+                static_cast<int>(prob.nrow()),
+                static_cast<int>(prob.ncol())}) < 1) {
+    return NumericVector(0);
+  }
+  
   int Nmax = std::max({
     static_cast<int>(x.nrow()),
     static_cast<int>(size.length()),
@@ -113,6 +121,15 @@ NumericMatrix cpp_rmnom(
     const NumericMatrix& prob
   ) {
   
+  if (std::min({static_cast<int>(size.length()),
+                static_cast<int>(prob.nrow()),
+                static_cast<int>(prob.ncol())}) < 1) {
+    Rcpp::warning("NAs produced");
+    NumericMatrix out(n, prob.ncol());
+    std::fill(out.begin(), out.end(), NA_REAL);
+    return out;
+  }
+  
   int k = prob.ncol();
   bool wrong_values;
   double p_tmp, size_left, sum_p, p_tot;
@@ -149,7 +166,7 @@ NumericMatrix cpp_rmnom(
 
     for (int j = 0; j < k-1; j++) {
       p_tmp = GETM(prob, i, j)/p_tot;
-      x(i, j) = R::rbinom(size_left, p_tmp/sum_p);
+      x(i, j) = R::rbinom(size_left, trunc_p(p_tmp/sum_p));
       size_left -= x(i, j);
       sum_p -= p_tmp;
     }

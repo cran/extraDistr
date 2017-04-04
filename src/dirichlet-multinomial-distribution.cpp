@@ -37,6 +37,14 @@ NumericVector cpp_ddirmnom(
     const bool& log_prob = false
   ) {
   
+  if (std::min({static_cast<int>(x.nrow()),
+                static_cast<int>(x.ncol()),
+                static_cast<int>(size.length()),
+                static_cast<int>(alpha.nrow()),
+                static_cast<int>(alpha.ncol())}) < 1) {
+    return NumericVector(0);
+  }
+  
   int Nmax = std::max({
     static_cast<int>(x.nrow()),
     static_cast<int>(size.length()),
@@ -118,6 +126,15 @@ NumericMatrix cpp_rdirmnom(
     const NumericMatrix& alpha
   ) {
   
+  if (std::min({static_cast<int>(size.length()),
+                static_cast<int>(alpha.nrow()),
+                static_cast<int>(alpha.ncol())}) < 1) {
+    Rcpp::warning("NAs produced");
+    NumericMatrix out(n, alpha.ncol());
+    std::fill(out.begin(), out.end(), NA_REAL);
+    return out;
+  }
+  
   int k = alpha.ncol();
   NumericMatrix x(n, k);
   
@@ -166,7 +183,7 @@ NumericMatrix cpp_rdirmnom(
     
     for (int j = 0; j < k-1; j++) {
       p_tmp = pi[j] / row_sum;
-      x(i, j) = R::rbinom(size_left, p_tmp/sum_p);
+      x(i, j) = R::rbinom(size_left, trunc_p(p_tmp/sum_p));
       size_left -= x(i, j);
       sum_p -= p_tmp;
     }

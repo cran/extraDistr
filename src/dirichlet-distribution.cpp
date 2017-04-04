@@ -33,6 +33,11 @@ NumericVector cpp_ddirichlet(
     const NumericMatrix& alpha,
     const bool& log_prob = false
   ) {
+  
+  if (std::min({x.nrow(), x.ncol(),
+                alpha.nrow(), alpha.ncol()}) < 1) {
+    return NumericVector(0);
+  }
 
   int Nmax = std::max({
     x.nrow(),
@@ -109,6 +114,13 @@ NumericMatrix cpp_rdirichlet(
     const int& n,
     const NumericMatrix& alpha
   ) {
+  
+  if (std::min({alpha.nrow(), alpha.ncol()}) < 1) {
+    Rcpp::warning("NAs produced");
+    NumericMatrix out(n, alpha.ncol());
+    std::fill(out.begin(), out.end(), NA_REAL);
+    return out;
+  }
 
   int k = alpha.ncol();
   NumericMatrix x(n, k);

@@ -51,10 +51,10 @@ inline double pdf_bnorm(double x, double y, double mu1, double mu2,
   double z1 = (x - mu1)/sigma1;
   double z2 = (y - mu2)/sigma2;
   
-  double c1 = 1.0/(2.0*M_PI*sqrt(1.0 - pow(rho, 2.0))*sigma1*sigma2);
-  double c2 = -1.0/(2.0*(1.0 - pow(rho, 2.0)));
+  double c1 = 1.0/(2.0*M_PI*sqrt(1.0 - (rho*rho))*sigma1*sigma2);
+  double c2 = -1.0/(2.0*(1.0 - (rho*rho)));
   
-  return c1 * exp(c2 * (pow(z1, 2.0) - 2.0*rho*z1*z2 + pow(z2, 2.0)));
+  return c1 * exp(c2 * ((z1*z1) - 2.0*rho*z1*z2 + (z2*z2)));
 }
 
 
@@ -69,6 +69,13 @@ NumericVector cpp_dbnorm(
     const NumericVector& rho,
     const bool& log_prob = false
   ) {
+  
+  if (std::min({x.length(), y.length(),
+                mu1.length(), mu2.length(),
+                sigma1.length(), sigma2.length(),
+                rho.length()}) < 1) {
+    return NumericVector(0);
+  }
 
   int Nmax = std::max({
     x.length(),
@@ -111,6 +118,15 @@ NumericMatrix cpp_rbnorm(
     const NumericVector& sigma2,
     const NumericVector& rho
   ) {
+  
+  if (std::min({mu1.length(), mu2.length(),
+                sigma1.length(), sigma2.length(),
+                rho.length()}) < 1) {
+    Rcpp::warning("NAs produced");
+    NumericMatrix out(n, 2);
+    std::fill(out.begin(), out.end(), NA_REAL);
+    return out;
+  }
 
   NumericMatrix x(n, 2);
   double u, v, corr;

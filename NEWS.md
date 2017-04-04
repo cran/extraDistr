@@ -1,4 +1,11 @@
 
+### 1.8.5
+
+* Now `rmnom` and `rdirmnom` (issue #3) do not return `NaN`'s due to
+  underflow issues.
+* Fixed bug (issue #4) that resulted in hanging R if zero-length vectors
+  were provided as input.
+
 ### 1.8.4
 
 * Random generation from categorical distribution parametrized by
