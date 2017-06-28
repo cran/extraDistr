@@ -77,6 +77,8 @@ inline std::vector<double> cdf_gpois_table(double x, double alpha, double beta) 
   double dj;
   
   for (int j = 2; j <= ix; j++) {
+    if (j % 10000 == 0)
+      Rcpp::checkUserInterrupt();
     dj = to_dbl(j);
     gax += log(dj + alpha - 1.0);
     xf += log(dj);
@@ -159,7 +161,7 @@ NumericVector cpp_pgpois(
   double mx = finite_max_int(x);
   
   for (int i = 0; i < Nmax; i++) {
-    if (i % 1000 == 0)
+    if (i % 100 == 0)
       Rcpp::checkUserInterrupt();
     if (ISNAN(GETV(x, i)) || ISNAN(GETV(alpha, i)) || ISNAN(GETV(beta, i))) {
       p[i] = GETV(x, i) + GETV(alpha, i) + GETV(beta, i);

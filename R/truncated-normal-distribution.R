@@ -10,8 +10,8 @@
 #' @param n	              number of observations. If \code{length(n) > 1},
 #'                        the length is taken to be the number required.
 #' @param mean,sd         location and scale parameters. Scale must be positive.
-#' @param a,b             minimal and maximal boundries for truncation
-#'                        (\code{-Inf} and \code{Inf} by default).
+#' @param a,b             lower and upper truncation points (\code{a < x <= b},
+#'                        with \code{a = -Inf} and \code{b = Inf} by default).
 #' @param log,log.p	      logical; if TRUE, probabilities p are given as log(p).
 #' @param lower.tail	    logical; if TRUE (default), probabilities are \eqn{P[X \le x]}
 #'                        otherwise, \eqn{P[X > x]}.
@@ -102,7 +102,7 @@
 #' @export
 
 dtnorm <- function(x, mean = 0, sd = 1, a = -Inf, b = Inf, log = FALSE) {
-  cpp_dtnorm(x, mean, sd, a, b, log)
+  cpp_dtnorm(x, mean, sd, a, b, log[1L])
 }
 
 
@@ -110,7 +110,7 @@ dtnorm <- function(x, mean = 0, sd = 1, a = -Inf, b = Inf, log = FALSE) {
 #' @export
 
 ptnorm <- function(q, mean = 0, sd = 1, a = -Inf, b = Inf, lower.tail = TRUE, log.p = FALSE) {
-  cpp_ptnorm(q, mean, sd, a, b, lower.tail, log.p)
+  cpp_ptnorm(q, mean, sd, a, b, lower.tail[1L], log.p[1L])
 }
 
 
@@ -118,7 +118,7 @@ ptnorm <- function(q, mean = 0, sd = 1, a = -Inf, b = Inf, lower.tail = TRUE, lo
 #' @export
 
 qtnorm <- function(p, mean = 0, sd = 1, a = -Inf, b = Inf, lower.tail = TRUE, log.p = FALSE) {
-  cpp_qtnorm(p, mean, sd, a, b, lower.tail, log.p)
+  cpp_qtnorm(p, mean, sd, a, b, lower.tail[1L], log.p[1L])
 }
 
 

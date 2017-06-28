@@ -91,6 +91,8 @@ inline std::vector<double> cdf_bbinom_table(double k, double n,
   double dj;
   
   for (int j = 2; j <= ik; j++) {
+    if (j % 10000 == 0)
+      Rcpp::checkUserInterrupt();
     dj = to_dbl(j);
     nck += log((n + 1.0 - dj)/dj);
     gx += log(dj + alpha - 1.0);
@@ -182,7 +184,7 @@ NumericVector cpp_pbbinom(
   
   for (int i = 0; i < Nmax; i++) {
     
-    if (i % 1000 == 0)
+    if (i % 100 == 0)
       Rcpp::checkUserInterrupt();
     
     if (ISNAN(GETV(x, i)) || ISNAN(GETV(size, i)) ||

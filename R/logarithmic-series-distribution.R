@@ -1,9 +1,9 @@
 
 
-#' Logarythmic series distribution
+#' Logarithmic series distribution
 #'
 #' Density, distribution function, quantile function and random generation
-#' for the logarythmic series distribution.
+#' for the logarithmic series distribution.
 #'
 #' @param x,q	            vector of quantiles.
 #' @param p	              vector of probabilities.
@@ -66,7 +66,7 @@
 #' @export
 
 dlgser <- function(x, theta, log = FALSE) {
-  cpp_dlgser(x, theta, log)
+  cpp_dlgser(x, theta, log[1L])
 }
 
 
@@ -74,7 +74,7 @@ dlgser <- function(x, theta, log = FALSE) {
 #' @export
 
 plgser <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
-  cpp_plgser(q, theta, lower.tail, log.p)
+  cpp_plgser(q, theta, lower.tail[1L], log.p[1L])
 }
 
 
@@ -82,7 +82,7 @@ plgser <- function(q, theta, lower.tail = TRUE, log.p = FALSE) {
 #' @export
 
 qlgser <- function(p, theta, lower.tail = TRUE, log.p = FALSE) {
-  cpp_qlgser(p, theta, lower.tail, log.p)
+  cpp_qlgser(p, theta, lower.tail[1L], log.p[1L])
 }
 
 

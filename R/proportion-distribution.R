@@ -41,7 +41,7 @@
 #' uniform prior; \eqn{\pi = 1/2} corresponds to Jeffreys prior; \eqn{\pi = 0}
 #' corresponds to "uninformative" Haldane prior, this is also the re-parametrized
 #' distribution used in beta regression. With \eqn{\pi = 0} the distribution
-#' can be understood as a continous analog to binomial distribution dealing
+#' can be understood as a continuous analog to binomial distribution dealing
 #' with proportions rather then counts. Alternatively \eqn{\phi} may be
 #' understood as precision parameter (as in beta regression).
 #' 
@@ -58,7 +58,7 @@
 #' 
 #' @references 
 #' Smithson, M., & Verkuilen, J. (2006). A better lemon squeezer? Maximum-likelihood regression
-#' with beta-distribued dependent variables.
+#' with beta-distributed dependent variables.
 #' Psychological Methods, 11(1), 54-71.
 #' 
 #' @examples 
@@ -87,7 +87,7 @@
 #' @export
 
 dprop <- function(x, size, mean, prior = 0, log = FALSE) {
-  cpp_dprop(x, size, mean, prior, log)
+  cpp_dprop(x, size, mean, prior, log[1L])
 }
 
 
@@ -95,7 +95,7 @@ dprop <- function(x, size, mean, prior = 0, log = FALSE) {
 #' @export
 
 pprop <- function(q, size, mean, prior = 0, lower.tail = TRUE, log.p = FALSE) {
-  cpp_pprop(q, size, mean, prior, lower.tail, log.p)
+  cpp_pprop(q, size, mean, prior, lower.tail[1L], log.p[1L])
 }
 
 
@@ -103,7 +103,7 @@ pprop <- function(q, size, mean, prior = 0, lower.tail = TRUE, log.p = FALSE) {
 #' @export
 
 qprop <- function(p, size, mean, prior = 0, lower.tail = TRUE, log.p = FALSE) {
-  cpp_qprop(p, size, mean, prior, lower.tail, log.p)
+  cpp_qprop(p, size, mean, prior, lower.tail[1L], log.p[1L])
 }
 
 

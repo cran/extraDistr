@@ -5,7 +5,7 @@
 #' Density, distribution function and random generation
 #' for the bivariate normal distribution.
 #'
-#' @param x,y	        vectors of quantiles; alternativelly x may be a two-column
+#' @param x,y	        vectors of quantiles; alternatively x may be a two-column
 #'                    matrix (or data.frame) and y may be omitted.
 #' @param n	          number of observations. If \code{length(n) > 1},
 #'                    the length is taken to be the number required.
@@ -67,7 +67,7 @@ dbvnorm <- function(x, y = NULL, mean1 = 0, mean2 = mean1, sd1 = 1, sd2 = sd1, c
       stop("y is not provided while x is not a two-column matrix")
     }
   }
-  cpp_dbnorm(x, y, mean1, mean2, sd1, sd2, cor, log)
+  cpp_dbnorm(x, y, mean1, mean2, sd1, sd2, cor, log[1L])
 }
 
 
