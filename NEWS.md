@@ -1,4 +1,11 @@
 
+### 1.8.7
+
+* Fixed bug in `pinvgamma` (`lower.tail` and `log.p` didn't work)
+* Fixed underflow issues with `rmnom` and `rdirmnom` (#7)
+* The `*nst` functions are now deprecated and renamed to more informative
+  abbrevation `*lst`
+
 ### 1.8.6
 
 * Now consistently with base R only the first elements of the logical
@@ -157,8 +164,8 @@
 
 ### 1.5.15-19
 
-* Ranamed zero-inflated distributions to *`zip` and *`zinb`
-* Added zero-inflated binomial *`zib`
+* Ranamed zero-inflated distributions to `*zip` and `*zinb`
+* Added zero-inflated binomial `*zib`
 * Code clean-up
 * Added `pzipois` and `pzibinom`
 * Added `qlgser`; changes in `plgser` and `rlgser`
