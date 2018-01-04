@@ -11,6 +11,7 @@ using std::floor;
 using std::ceil;
 using Rcpp::NumericVector;
 
+using std::log1p;
 
 /*
 *  Logarithmic Series distribution
@@ -27,25 +28,30 @@ using Rcpp::NumericVector;
 */
 
 
-double pdf_lgser(double x, double theta, bool& throw_warnin) {
+inline double logpdf_lgser(double x, double theta, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(theta))
     return x+theta;
+#endif
   if (theta <= 0.0 || theta >= 1.0) {
-    throw_warnin = true;
+    throw_warning = true;
     return NAN;
   }
   if (!isInteger(x) || x < 1.0)
-    return 0.0;
-  double a = -1.0/log(1.0 - theta);
-  return a * pow(theta, x) / x;
+    return R_NegInf;
+  // a = -1.0/log(1.0 - theta);
+  double a = -1.0/log1p(-theta);
+  // a * pow(theta, x) / x;
+  return log(a) + (log(theta) * x) - log(x);
 }
 
-
-double cdf_lgser(double x, double theta, bool& throw_warnin) {
+inline double cdf_lgser(double x, double theta, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(theta))
     return x+theta;
+#endif
   if (theta <= 0.0 || theta >= 1.0) {
-    throw_warnin = true;
+    throw_warning = true;
     return NAN;
   }
   if (x < 1.0)
@@ -57,7 +63,7 @@ double cdf_lgser(double x, double theta, bool& throw_warnin) {
     return NA_REAL;
   }
   
-  double a = -1.0/log(1.0 - theta);
+  double a = -1.0/log1p(-theta);
   double b = 0.0;
   double dk;
   int ix = to_pos_int(x);
@@ -70,11 +76,13 @@ double cdf_lgser(double x, double theta, bool& throw_warnin) {
   return a * b;
 }
 
-double invcdf_lgser(double p, double theta, bool& throw_warnin) {
+inline double invcdf_lgser(double p, double theta, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(theta))
     return p+theta;
+#endif
   if (theta <= 0.0 || theta >= 1.0 || !VALID_PROB(p)) {
-    throw_warnin = true;
+    throw_warning = true;
     return NAN;
   }
   if (p == 0.0)
@@ -94,9 +102,9 @@ double invcdf_lgser(double p, double theta, bool& throw_warnin) {
   return k;
 }
 
-double rng_lgser(double theta, bool& throw_warnin) {
+inline double rng_lgser(double theta, bool& throw_warning) {
   if (ISNAN(theta) || theta <= 0.0 || theta >= 1.0) {
-    throw_warnin = true;
+    throw_warning = true;
     return NA_REAL;
   }
 
@@ -134,11 +142,11 @@ NumericVector cpp_dlgser(
   bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_lgser(GETV(x, i), GETV(theta, i),
-                     throw_warning);
+    p[i] = logpdf_lgser(GETV(x, i), GETV(theta, i),
+                        throw_warning);
  
- if (log_prob)
-   p = Rcpp::log(p);
+ if (!log_prob)
+   p = Rcpp::exp(p);
  
  if (throw_warning)
    Rcpp::warning("NaNs produced");

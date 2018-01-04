@@ -1,4 +1,17 @@
 
+### 1.8.8
+
+* Deprecated functions: `dnst`, `pnst`, `qnst` and `rnst` were removed
+* Fixed typos in documentation (thanks to #8 by philchalmers)
+* Converted a number of pdf and cdf functions to more numerically stable
+  versions using logs (see #9 and #10)
+* Fixed bug in `ppower`: with `lower.tail = FALSE` it returned wrong values
+* Fixed bug in `dgpd` and `pgpd`: they assumed slightly wrong support 
+* Improved the `rgev` and `rgpd`, now they give better random values since 
+  relying on exponential distribution random generator if possible
+* Documentation was improved and corrected in several places
+* Power distribution functions now check if `alpha > 0` and `beta > 0`
+
 ### 1.8.7
 
 * Fixed bug in `pinvgamma` (`lower.tail` and `log.p` didn't work)

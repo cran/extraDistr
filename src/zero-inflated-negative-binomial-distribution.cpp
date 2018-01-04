@@ -11,6 +11,8 @@ using std::floor;
 using std::ceil;
 using Rcpp::NumericVector;
 
+using std::log1p;
+
 
 /*
 * Zero-inflated Poisson distribution
@@ -26,24 +28,31 @@ using Rcpp::NumericVector;
 
 inline double pdf_zinb(double x, double r, double p, double pi,
                        bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(r) || ISNAN(p) || ISNAN(pi))
     return x+r+p+pi;
+#endif
   if (!VALID_PROB(p) || r < 0.0 || !VALID_PROB(pi) || !isInteger(r, false)) {
     throw_warning = true;
     return NAN;
   }
   if (x < 0.0 || !isInteger(x) || !R_FINITE(x))
     return 0.0;
-  if (x == 0.0)
-    return pi + (1.0-pi) * pow(p, r);
-  else
-    return (1.0-pi) * R::dnbinom(x, r, p, false);
+  if (x == 0.0) {
+    // pi + (1.0-pi) * pow(p, r);
+    return pi + exp(log1p(-pi) + log(p) * r);
+  } else {
+    // (1.0-pi) * R::dnbinom(x, r, p, false);
+    return exp(log1p(-pi) + R::dnbinom(x, r, p, true));
+  }
 }
 
 inline double cdf_zinb(double x, double r, double p, double pi,
                        bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(r) || ISNAN(p) || ISNAN(pi))
     return x+r+p+pi;
+#endif
   if (!VALID_PROB(p) || r < 0.0 || !VALID_PROB(pi) || !isInteger(r, false)) {
     throw_warning = true;
     return NAN;
@@ -52,13 +61,16 @@ inline double cdf_zinb(double x, double r, double p, double pi,
     return 0.0;
   if (!R_FINITE(x))
     return 1.0;
-  return pi + (1.0-pi) * R::pnbinom(x, r, p, true, false);
+  // pi + (1.0-pi) * R::pnbinom(x, r, p, true, false);
+  return pi + exp(log1p(-pi) + R::pnbinom(x, r, p, true, true));
 }
 
 inline double invcdf_zinb(double pp, double r, double p, double pi,
                           bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(pp) || ISNAN(r) || ISNAN(p) || ISNAN(pi))
     return pp+r+p+pi;
+#endif
   if (!VALID_PROB(p) || r < 0.0 || !VALID_PROB(pi) ||
       !isInteger(r, false) || !VALID_PROB(pp)) {
     throw_warning = true;

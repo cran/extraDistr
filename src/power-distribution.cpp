@@ -19,8 +19,8 @@ using Rcpp::NumericVector;
 *  0 < x < alpha
 *
 *  Parameters:
-*  alpha
-*  beta
+*  alpha > 0
+*  beta > 0
 *
 *  f(x)    = (beta*x^(beta-1)) / (alpha^beta)
 *  F(x)    = x^beta / alpha^beta
@@ -28,33 +28,48 @@ using Rcpp::NumericVector;
 *
 */
 
-/*
- inline double pdf_power(double x, double alpha, double beta,
-                         bool& throw_warning) {
+
+inline double logpdf_power(double x, double alpha, double beta,
+                           bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta))
     return x+alpha+beta;
+#endif
+  if (alpha <= 0.0 || beta <= 0.0) {
+    throw_warning = true;
+    return NAN;
+  }
   if (x <= 0.0 || x >= alpha)
-    return 0.0;
-  return beta * pow(x, beta-1.0) / pow(alpha, beta);
+    return R_NegInf;
+  // beta * pow(x, beta-1.0) / pow(alpha, beta);
+  return log(beta) + log(x)*(beta-1.0) - log(alpha)*beta;
 }
 
- inline double cdf_power(double x, double alpha, double beta,
-                 bool& throw_warning) {
+inline double cdf_power(double x, double alpha, double beta,
+                        bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta))
     return x+alpha+beta;
+#endif
+  if (alpha <= 0.0 || beta <= 0.0) {
+    throw_warning = true;
+    return NAN;
+  }
   if (x <= 0.0)
     return 0.0;
   if (x >= alpha)
     return 1.0;
-  return pow(x, beta) / pow(alpha, beta);
+  // pow(x, beta) / pow(alpha, beta);
+  return exp( log(x)*beta - log(alpha)*beta );
 }
-*/
 
 inline double invcdf_power(double p, double alpha, double beta,
                            bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(alpha) || ISNAN(beta))
     return p+alpha+beta;
-  if (!VALID_PROB(p)) {
+#endif
+  if (alpha <= 0.0 || beta <= 0.0 || !VALID_PROB(p)) {
     throw_warning = true;
     return NAN;
   }
@@ -63,32 +78,13 @@ inline double invcdf_power(double p, double alpha, double beta,
 
 inline double rng_power(double alpha, double beta,
                         bool& throw_warning) {
-  if (ISNAN(alpha) || ISNAN(beta)) {
+  if (ISNAN(alpha) || ISNAN(beta) ||
+      alpha <= 0.0 || beta <= 0.0) {
     throw_warning = true;
     return NA_REAL;
   }
   double u = rng_unif();
   return alpha * pow(u, 1.0/beta);
-}
-
-inline double logpdf_power(double x, double alpha, double beta,
-                           bool& throw_warning) {
-  if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta))
-    return x+alpha+beta;
-  if (x <= 0.0 || x >= alpha)
-    return R_NegInf;
-  return log(beta) + log(x)*(beta-1.0) - log(alpha)*beta;
-}
-
-inline double logcdf_power(double x, double alpha, double beta,
-                           bool& throw_warning) {
-  if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta))
-    return x+alpha+beta;
-  if (x <= 0.0)
-    return R_NegInf;
-  if (x >= alpha)
-    return 0.0;
-  return log(x)*beta - log(alpha)*beta;
 }
 
 
@@ -150,14 +146,14 @@ NumericVector cpp_ppower(
   bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = logcdf_power(GETV(x, i), GETV(alpha, i),
-                        GETV(beta, i), throw_warning);
+    p[i] = cdf_power(GETV(x, i), GETV(alpha, i),
+                     GETV(beta, i), throw_warning);
 
   if (!lower_tail)
     p = 1.0 - p;
 
-  if (!log_prob)
-    p = Rcpp::exp(p);
+  if (log_prob)
+    p = Rcpp::log(p);
   
   if (throw_warning)
     Rcpp::warning("NaNs produced");

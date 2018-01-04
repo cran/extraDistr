@@ -11,6 +11,7 @@ using std::floor;
 using std::ceil;
 using Rcpp::NumericVector;
 
+using std::log1p;
 
 /*
 *  Beta prime distribution
@@ -25,24 +26,13 @@ using Rcpp::NumericVector;
 *
 */
 
-inline double pdf_betapr(double x, double alpha, double beta,
-                         double sigma, bool& throw_warning) {
-  if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta) || ISNAN(sigma))
-    return x+alpha+beta+sigma;
-  if (alpha <= 0.0 || beta <= 0.0 || sigma <= 0.0) {
-    throw_warning = true;
-    return NAN;
-  }
-  if (x <= 0.0 || !R_FINITE(x))
-    return 0.0;
-  double z = x / sigma;
-  return pow(z, alpha-1.0) * pow(z+1.0, -alpha-beta) / R::beta(alpha, beta) / sigma;
-}
 
 inline double logpdf_betapr(double x, double alpha, double beta,
                             double sigma, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta) || ISNAN(sigma))
     return x+alpha+beta+sigma;
+#endif
   if (alpha <= 0.0 || beta <= 0.0 || sigma <= 0.0) {
     throw_warning = true;
     return NAN;
@@ -50,13 +40,17 @@ inline double logpdf_betapr(double x, double alpha, double beta,
   if (x <= 0.0 || !R_FINITE(x))
     return R_NegInf;
   double z = x / sigma;
-  return log(pow(z, alpha-1.0)) + log(pow(z+1.0, -alpha-beta)) - R::lbeta(alpha, beta) - log(sigma);
+  // pow(z, alpha-1.0) * pow(z+1.0, -alpha-beta) / R::beta(alpha, beta) / sigma;
+  return log(z) * (alpha-1.0) + log1p(z) * (-alpha-beta) -
+    R::lbeta(alpha, beta) - log(sigma);
 }
 
 inline double cdf_betapr(double x, double alpha, double beta,
                          double sigma, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta) || ISNAN(sigma))
     return x+alpha+beta+sigma;
+#endif
   if (alpha <= 0.0 || beta <= 0.0 || sigma <= 0.0) {
     throw_warning = true;
     return NAN;
@@ -71,8 +65,10 @@ inline double cdf_betapr(double x, double alpha, double beta,
 
 inline double invcdf_betapr(double p, double alpha, double beta,
                             double sigma, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(alpha) || ISNAN(beta) || ISNAN(sigma))
     return p+alpha+beta+sigma;
+#endif
   if (alpha <= 0.0 || beta <= 0.0 || sigma <= 0.0 || !VALID_PROB(p)) {
     throw_warning = true;
     return NAN;
@@ -122,12 +118,12 @@ NumericVector cpp_dbetapr(
   bool throw_warning = false;
   
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_betapr(GETV(x, i), GETV(alpha, i),
-                      GETV(beta, i), GETV(sigma, i),
-                      throw_warning);
+    p[i] = logpdf_betapr(GETV(x, i), GETV(alpha, i),
+                         GETV(beta, i), GETV(sigma, i),
+                         throw_warning);
   
-  if (log_prob)
-    p = Rcpp::log(p);
+  if (!log_prob)
+    p = Rcpp::exp(p);
   
   if (throw_warning)
     Rcpp::warning("NaNs produced");

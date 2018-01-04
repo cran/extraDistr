@@ -27,31 +27,22 @@ using Rcpp::NumericVector;
 *
 */
 
-inline double pmf_bnbinom(double k, double r, double alpha,
-                          double beta, bool& throw_warning) {
-  if (ISNAN(k) || ISNAN(r) || ISNAN(alpha) || ISNAN(beta))
-    return k+r+alpha+beta;
-  if (alpha <= 0.0 || beta <= 0.0 || r < 0.0 || !isInteger(r, false)) {
-    throw_warning = true;
-    return NAN;
-  }
-  if (!isInteger(k) || k < 0.0 || !R_FINITE(k))
-    return 0.0;
-  return (R::gammafn(r+k) / (R::gammafn(k+1.0) * R::gammafn(r))) *
-          R::beta(alpha+r, beta+k) / R::beta(alpha, beta);
-}
 
 inline double logpmf_bnbinom(double k, double r, double alpha,
                              double beta, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(k) || ISNAN(r) || ISNAN(alpha) || ISNAN(beta))
     return k+r+alpha+beta;
+#endif
   if (alpha <= 0.0 || beta <= 0.0 || r < 0.0 || !isInteger(r, false)) {
     throw_warning = true;
     return NAN;
   }
   if (!isInteger(k) || k < 0.0 || !R_FINITE(k))
     return R_NegInf;
-  return (R::lgammafn(r+k) - (R::lgammafn(k+1.0) + R::lgammafn(r))) +
+  // (R::gammafn(r+k) / (R::gammafn(k+1.0) * R::gammafn(r))) *
+  //     R::beta(alpha+r, beta+k) / R::beta(alpha, beta);
+  return (R::lgammafn(r+k) - R::lgammafn(k+1.0) - R::lgammafn(r)) +
     R::lbeta(alpha+r, beta+k) - R::lbeta(alpha, beta);
 }
 
@@ -192,10 +183,15 @@ NumericVector cpp_pbnbinom(
     if (i % 100 == 0)
       Rcpp::checkUserInterrupt();
     
+#ifdef IEEE_754
     if (ISNAN(GETV(x, i)) || ISNAN(GETV(size, i)) ||
         ISNAN(GETV(alpha, i)) || ISNAN(GETV(beta, i))) {
       p[i] = GETV(x, i) + GETV(size, i) + GETV(alpha, i) + GETV(beta, i);
-    } else if (GETV(alpha, i) <= 0.0 || GETV(beta, i) <= 0.0 ||
+      continue;
+    }
+#endif
+    
+    if (GETV(alpha, i) <= 0.0 || GETV(beta, i) <= 0.0 ||
                GETV(size, i) < 0.0 || !isInteger(GETV(size, i), false)) {
       throw_warning = true;
       p[i] = NAN;

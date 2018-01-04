@@ -30,24 +30,31 @@ using Rcpp::NumericVector;
 *
 */
 
-inline double pdf_invgamma(double x, double alpha, double beta,
-                           bool& throw_warning) {
+
+inline double logpdf_invgamma(double x, double alpha, double beta,
+                              bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta))
     return x+alpha+beta;
+#endif
   if (alpha <= 0.0 || beta <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   if (x <= 0.0)
-    return 0.0;
-  return (pow(x, -alpha-1.0) * exp(-1.0/(beta*x))) /
-         (R::gammafn(alpha) * pow(beta, alpha));
+    return R_NegInf;
+  // (pow(x, -alpha-1.0) * exp(-1.0/(beta*x))) /
+  //      (R::gammafn(alpha) * pow(beta, alpha));
+  return ( log(x) * (-alpha-1.0) + (-1.0/(beta*x)) ) -
+         R::lgammafn(alpha) - log(beta) * alpha;
 }
 
 inline double cdf_invgamma(double x, double alpha, double beta,
                            bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta))
     return x+alpha+beta;
+#endif
   if (alpha <= 0.0 || beta <= 0.0) {
     throw_warning = true;
     return NAN;
@@ -80,11 +87,11 @@ NumericVector cpp_dinvgamma(
   bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_invgamma(GETV(x, i), GETV(alpha, i),
-                        GETV(beta, i), throw_warning);
+    p[i] = logpdf_invgamma(GETV(x, i), GETV(alpha, i),
+                           GETV(beta, i), throw_warning);
 
-  if (log_prob)
-    p = Rcpp::log(p);
+  if (!log_prob)
+    p = Rcpp::exp(p);
   
   if (throw_warning)
     Rcpp::warning("NaNs produced");

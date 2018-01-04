@@ -27,23 +27,31 @@ using Rcpp::NumericVector;
  *
  */
 
-inline double pdf_rayleigh(double x, double sigma,
-                           bool& throw_warning) {
+
+inline double logpdf_rayleigh(double x, double sigma,
+                              bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(sigma))
     return x+sigma;
+#endif
   if (sigma <= 0.0) {
     throw_warning = true;
     return NAN;
   }
-  if (x < 0.0 || !R_FINITE(x))
-    return 0.0;
-  return x/(sigma*sigma) * exp(-(x*x) / (2.0*(sigma*sigma)));
+  if (x <= 0.0 || !R_FINITE(x))
+    return R_NegInf;
+  // x/(sigma*sigma) * exp(-(x*x) / (2.0*(sigma*sigma)));
+  double lsigsq = 2.0 * log(sigma);
+  double lxsq = 2.0 * log(x);
+  return log(x) - lsigsq - exp( lxsq - LOG_2F - lsigsq );
 }
 
 inline double cdf_rayleigh(double x, double sigma,
                            bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(sigma))
     return x+sigma;
+#endif
   if (sigma <= 0.0) {
     throw_warning = true;
     return NAN;
@@ -57,8 +65,10 @@ inline double cdf_rayleigh(double x, double sigma,
 
 inline double invcdf_rayleigh(double p, double sigma,
                               bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(sigma))
     return p+sigma;
+#endif
   if (!VALID_PROB(p) || sigma <= 0.0) {
     throw_warning = true;
     return NAN;
@@ -96,11 +106,11 @@ NumericVector cpp_drayleigh(
   bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_rayleigh(GETV(x, i), GETV(sigma, i),
-                        throw_warning);
+    p[i] = logpdf_rayleigh(GETV(x, i), GETV(sigma, i),
+                           throw_warning);
 
-  if (log_prob)
-    p = Rcpp::log(p);
+  if (!log_prob)
+    p = Rcpp::exp(p);
   
   if (throw_warning)
     Rcpp::warning("NaNs produced");

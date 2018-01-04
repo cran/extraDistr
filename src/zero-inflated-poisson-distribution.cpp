@@ -11,6 +11,8 @@ using std::floor;
 using std::ceil;
 using Rcpp::NumericVector;
 
+using std::log1p;
+
 
 /*
 * Zero-inflated Poisson distribution
@@ -26,24 +28,31 @@ using Rcpp::NumericVector;
 
 inline double pdf_zip(double x, double lambda, double pi,
                       bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(lambda) || ISNAN(pi))
     return x+lambda+pi;
+#endif
   if (lambda <= 0.0 || !VALID_PROB(pi)) {
     throw_warning = true;
     return NAN;
   }
   if (x < 0.0 || !isInteger(x) || !R_FINITE(x))
     return 0.0;
-  if (x == 0.0)
-    return pi + (1.0-pi) * exp(-lambda);
-  else
-    return (1.0-pi) * R::dpois(x, lambda, false);
+  if (x == 0.0) {
+    // pi + (1.0-pi) * exp(-lambda);
+    return pi + exp( log1p(-pi) - lambda );
+  } else {
+    // (1.0-pi) * R::dpois(x, lambda, false);
+    return exp( log1p(-pi) + R::dpois(x, lambda, true) );
+  }
 }
 
 inline double cdf_zip(double x, double lambda, double pi,
                       bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(lambda) || ISNAN(pi))
     return x+lambda+pi;
+#endif
   if (lambda <= 0.0 || !VALID_PROB(pi)) {
     throw_warning = true;
     return NAN;
@@ -52,13 +61,16 @@ inline double cdf_zip(double x, double lambda, double pi,
     return 0.0;
   if (!R_FINITE(x))
     return 1.0;
-  return pi + (1.0-pi) * R::ppois(x, lambda, true, false);
+  // pi + (1.0-pi) * R::ppois(x, lambda, true, false);
+  return pi + exp(log1p(-pi) + R::ppois(x, lambda, true, true));
 }
 
 inline double invcdf_zip(double p, double lambda, double pi,
                          bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(lambda) || ISNAN(pi))
     return p+lambda+pi;
+#endif
   if (lambda <= 0.0 || !VALID_PROB(pi) || !VALID_PROB(p)) {
     throw_warning = true;
     return NAN;

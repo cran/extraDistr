@@ -34,23 +34,28 @@ using Rcpp::NumericVector;
 */
 
 
-inline double pdf_gompertz(double x, double a, double b,
-                           bool& throw_warning) {
+inline double logpdf_gompertz(double x, double a, double b,
+                              bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(a) || ISNAN(b))
     return x+a+b;
+#endif
   if (a <= 0.0 || b <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   if (x < 0.0 || !R_FINITE(x))
-    return 0.0;
-  return a * exp(b*x - a/b * (exp(b*x) - 1.0));
+    return R_NegInf;
+  // a * exp(b*x - a/b * (exp(b*x) - 1.0));
+  return log(a) + (b*x - a/b * (exp(b*x) - 1.0));
 }
 
 inline double cdf_gompertz(double x, double a, double b,
                            bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(a) || ISNAN(b))
     return x+a+b;
+#endif
   if (a <= 0.0 || b <= 0.0) {
     throw_warning = true;
     return NAN;
@@ -64,8 +69,10 @@ inline double cdf_gompertz(double x, double a, double b,
 
 inline double invcdf_gompertz(double p, double a, double b,
                               bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(a) || ISNAN(b))
     return p+a+b;
+#endif
   if (a <= 0.0 || b <= 0.0 || !VALID_PROB(p)) {
     throw_warning = true;
     return NAN;
@@ -80,19 +87,6 @@ inline double rng_gompertz(double a, double b, bool& throw_warning) {
   }
   double u = rng_unif();
   return log(1.0 - b/a * log(u)) / b;
-}
-
-inline double logpdf_gompertz(double x, double a, double b,
-                              bool& throw_warning) {
-  if (ISNAN(x) || ISNAN(a) || ISNAN(b))
-    return x+a+b;
-  if (a <= 0.0 || b <= 0.0) {
-    throw_warning = true;
-    return NAN;
-  }
-  if (x < 0.0 || !R_FINITE(x))
-    return R_NegInf;
-  return log(a) + (b*x - a/b * (exp(b*x) - 1.0));
 }
 
 

@@ -42,9 +42,9 @@ for the "Huber density" distribution.
 Huber density is connected to Huber loss and can be defined as:
 
 \deqn{
-f(x) = \frac{1-\epsilon}{\sqrt{2\pi}} e^{-\rho_k(x)}
+f(x) = \frac{1}{2 \sqrt{2\pi} \left( \Phi(k) + \phi(k)/k - \frac{1}{2} \right)} e^{-\rho_k(x)}
 }{
-f(x) = (1-\epsilon)/sqrt(2*\pi) * exp(-\rho(x, k))
+f(x) = 1/(2 * sqrt(2\pi) * (\Phi(k) + \phi(k)/k - 1/2)) * exp(-\rho(x, k))
 }
 
 where
@@ -58,20 +58,12 @@ k|x|- \frac{1}{2} k^2 & |x|>k
 }{
 \rho(x, k) = [if abs(x) <= k:] (x^2)/2 [else:] k*abs(x) - (k^2)/2
 }
-
-and \eqn{\epsilon} satisfies
-
-\deqn{
-\frac{2\phi(k)}{k} - 2\Phi(-k) = \frac{\epsilon}{1-\epsilon}
-}{
-(2 * \phi(k))/k - 2* \Phi(-k) = \epsilon/(1-\epsilon)
-}
 }
 \examples{
 
 x <- rhuber(1e5, 5, 2, 3)
 hist(x, 100, freq = FALSE)
-curve(dhuber(x, 5, 2, 3), -20, 20, col = "red", add = TRUE)
+curve(dhuber(x, 5, 2, 3), -20, 20, col = "red", add = TRUE, n = 5000)
 hist(phuber(x, 5, 2, 3))
 plot(ecdf(x))
 curve(phuber(x, 5, 2, 3), -20, 20, col = "red", lwd = 2, add = TRUE)

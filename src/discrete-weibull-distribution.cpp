@@ -33,8 +33,10 @@ using Rcpp::NumericVector;
 
 inline double pdf_dweibull(double x, double q, double beta,
                            bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(q) || ISNAN(beta))
     return x+q+beta;
+#endif
   if (q <= 0.0 || q >= 1.0 || beta <= 0.0) {
     throw_warning = true;
     return NAN;
@@ -46,21 +48,26 @@ inline double pdf_dweibull(double x, double q, double beta,
 
 inline double cdf_dweibull(double x, double q, double beta,
                            bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(q) || ISNAN(beta))
     return x+q+beta;
+#endif
   if (q <= 0.0 || q >= 1.0 || beta <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   if (x < 0.0)
     return 0.0;
-  return 1.0 - pow(q, pow(x+1.0, beta));
+  // 1.0 - pow(q, pow(x+1.0, beta))
+  return 1.0 - exp(log(q) * exp(log1p(x) * beta));
 }
 
 inline double invcdf_dweibull(double p, double q, double beta,
                               bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(q) || ISNAN(beta))
     return p+q+beta;
+#endif
   if (q <= 0.0 || q >= 1.0 || beta <= 0.0 || !VALID_PROB(p)) {
     throw_warning = true;
     return NAN;

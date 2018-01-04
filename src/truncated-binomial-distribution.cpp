@@ -12,29 +12,33 @@ using std::ceil;
 using Rcpp::NumericVector;
 
 
-inline double pdf_tbinom(double x, double size, double prob, double a,
-                         double b, bool& throw_warning) {
+inline double logpdf_tbinom(double x, double size, double prob, double a,
+                            double b, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(size) || ISNAN(prob) || ISNAN(a) || ISNAN(b))
     return x+size+prob+a+b;
+#endif
   if (size < 0.0 || !VALID_PROB(prob) || b < a || !isInteger(size, false)) {
     throw_warning = true;
     return NAN;
   }
   
   if (!isInteger(x) || x < 0.0 || x <= a || x > b || x > size)
-    return 0.0;
+    return R_NegInf;
   
   double pa, pb;
   pa = R::pbinom(a, size, prob, true, false);
   pb = R::pbinom(b, size, prob, true, false);
   
-  return R::dbinom(x, size, prob, false) / (pb-pa);
+  return R::dbinom(x, size, prob, true) - log(pb-pa);
 }
 
 inline double cdf_tbinom(double x, double size, double prob, double a,
                          double b, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(size) || ISNAN(prob) || ISNAN(a) || ISNAN(b))
     return x+size+prob+a+b;
+#endif
   if (size < 0.0 || !VALID_PROB(prob) || b < a ||
       !isInteger(size, false)) {
     throw_warning = true;
@@ -55,8 +59,10 @@ inline double cdf_tbinom(double x, double size, double prob, double a,
 
 inline double invcdf_tbinom(double p, double size, double prob,
                             double a, double b, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(size) || ISNAN(prob) || ISNAN(a) || ISNAN(b))
     return p+size+prob+a+b;
+#endif
   if (size < 0.0 || !VALID_PROB(prob) || b < a ||
       !isInteger(size, false) || !VALID_PROB(p)) {
     throw_warning = true;
@@ -120,12 +126,12 @@ NumericVector cpp_dtbinom(
   bool throw_warning = false;
   
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_tbinom(GETV(x, i), GETV(size, i),
-                      GETV(prob, i), GETV(lower, i),
-                      GETV(upper, i), throw_warning);
+    p[i] = logpdf_tbinom(GETV(x, i), GETV(size, i),
+                         GETV(prob, i), GETV(lower, i),
+                         GETV(upper, i), throw_warning);
   
-  if (log_prob)
-    p = Rcpp::log(p);
+  if (!log_prob)
+    p = Rcpp::exp(p);
   
   if (throw_warning)
     Rcpp::warning("NaNs produced");

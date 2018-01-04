@@ -26,27 +26,32 @@ using Rcpp::NumericVector;
  * 
  */
 
-inline double pdf_fatigue(double x, double alpha, double beta,
-                          double mu, bool& throw_warning) {
+inline double logpdf_fatigue(double x, double alpha, double beta,
+                             double mu, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta) || ISNAN(mu))
     return x+alpha+beta+mu;
+#endif
   if (alpha <= 0.0 || beta <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   if (x <= mu || !R_FINITE(x))
-    return 0.0;
+    return R_NegInf;
   double z, zb, bz;
   z = x-mu;
   zb = sqrt(z/beta);
   bz = sqrt(beta/z);
-  return (zb+bz)/(2.0*alpha*z) * phi((zb-bz)/alpha);
+  // (zb+bz)/(2.0*alpha*z) * phi((zb-bz)/alpha)
+  return log(zb+bz) - LOG_2F - log(alpha) - log(z) + lphi((zb-bz)/alpha);
 }
 
 inline double cdf_fatigue(double x, double alpha, double beta,
                           double mu, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(alpha) || ISNAN(beta) || ISNAN(mu))
     return x+alpha+beta+mu;
+#endif
   if (alpha <= 0.0 || beta <= 0.0) {
     throw_warning = true;
     return NAN;
@@ -62,8 +67,10 @@ inline double cdf_fatigue(double x, double alpha, double beta,
 
 inline double invcdf_fatigue(double p, double alpha, double beta,
                              double mu, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(alpha) || ISNAN(beta) || ISNAN(mu))
     return p+alpha+beta+mu;
+#endif
   if (alpha <= 0.0 || beta <= 0.0 || !VALID_PROB(p)) {
     throw_warning = true;
     return NAN;
@@ -110,12 +117,12 @@ NumericVector cpp_dfatigue(
   bool throw_warning = false;
   
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_fatigue(GETV(x, i), GETV(alpha, i),
-                       GETV(beta, i), GETV(mu, i),
-                       throw_warning);
+    p[i] = logpdf_fatigue(GETV(x, i), GETV(alpha, i),
+                          GETV(beta, i), GETV(mu, i),
+                          throw_warning);
   
-  if (log_prob)
-    p = Rcpp::log(p);
+  if (!log_prob)
+    p = Rcpp::exp(p);
   
   if (throw_warning)
     Rcpp::warning("NaNs produced");

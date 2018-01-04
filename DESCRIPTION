@@ -1,8 +1,8 @@
 Package: extraDistr
 Type: Package
 Title: Additional Univariate and Multivariate Distributions
-Version: 1.8.7
-Date: 2017-09-22
+Version: 1.8.8
+Date: 2018-01-04
 Author: Tymoteusz Wolodzko
 Maintainer: Tymoteusz Wolodzko <twolodzko+extraDistr@gmail.com>
 Description: Density, distribution function, quantile function
@@ -16,8 +16,8 @@ Description: Density, distribution function, quantile function
     gamma-Poisson, generalized extreme value, Gompertz,
     generalized Pareto, Gumbel, half-Cauchy, half-normal, half-t,
     Huber density, inverse chi-squared, inverse-gamma, Kumaraswamy,
-    Laplace, logarithmic, Lomax, multivariate hypergeometric,
-    multinomial, negative hypergeometric, non-standard t,
+    Laplace, location-scale t, logarithmic, Lomax, multivariate
+    hypergeometric, multinomial, negative hypergeometric, 
     non-standard beta, normal mixture, Poisson mixture, Pareto,
     power, reparametrized beta, Rayleigh, shifted Gompertz, Skellam,
     slash, triangular, truncated binomial, truncated normal,
@@ -26,6 +26,7 @@ Description: Density, distribution function, quantile function
 License: GPL-2
 URL: https://github.com/twolodzko/extraDistr
 BugReports: https://github.com/twolodzko/extraDistr/issues
+Encoding: UTF-8
 LazyData: TRUE
 Depends: R (>= 3.1.0)
 LinkingTo: Rcpp
@@ -34,6 +35,6 @@ Suggests: testthat
 SystemRequirements: C++11
 RoxygenNote: 6.0.1
 NeedsCompilation: yes
-Packaged: 2017-09-22 19:40:29 UTC; tymek
+Packaged: 2018-01-04 22:35:17 UTC; tymek
 Repository: CRAN
-Date/Publication: 2017-09-22 20:26:22 UTC
+Date/Publication: 2018-01-04 23:08:47 UTC

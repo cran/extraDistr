@@ -12,17 +12,19 @@ using std::ceil;
 using Rcpp::NumericVector;
 
 
-inline double pdf_tpois(double x, double lambda, double a,
-                        double b, bool& throw_warning) {
+inline double logpdf_tpois(double x, double lambda, double a,
+                           double b, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(lambda) || ISNAN(a) || ISNAN(b))
     return x+lambda+a+b;
+#endif
   if (lambda < 0.0 || b < a) {
     throw_warning = true;
     return NAN;
   }
   
   if (!isInteger(x) || x < 0.0 || x <= a || x > b || !R_FINITE(x))
-    return 0.0;
+    return R_NegInf;
   
   // if (a == 0.0 && b == R_PosInf)
   //   return pow(lambda, x) / (factorial(x) * (exp(lambda) - 1.0));
@@ -31,13 +33,15 @@ inline double pdf_tpois(double x, double lambda, double a,
   pa = R::ppois(a, lambda, true, false);
   pb = R::ppois(b, lambda, true, false);
   
-  return R::dpois(x, lambda, false) / (pb-pa);
+  return R::dpois(x, lambda, true) - log(pb-pa);
 }
 
 inline double cdf_tpois(double x, double lambda, double a,
                         double b, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(lambda) || ISNAN(a) || ISNAN(b))
     return x+lambda+a+b;
+#endif
   if (lambda <= 0.0 || b < a) {
     throw_warning = true;
     return NAN;
@@ -60,8 +64,10 @@ inline double cdf_tpois(double x, double lambda, double a,
 
 inline double invcdf_tpois(double p, double lambda, double a,
                            double b, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(lambda) || ISNAN(a) || ISNAN(b))
     return p+lambda+a+b;
+#endif
   if (lambda < 0.0 || b < a || !VALID_PROB(p)) {
     throw_warning = true;
     return NAN;
@@ -121,12 +127,12 @@ NumericVector cpp_dtpois(
   bool throw_warning = false;
   
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_tpois(GETV(x, i), GETV(lambda, i),
-                     GETV(lower, i), GETV(upper, i),
-                     throw_warning);
+    p[i] = logpdf_tpois(GETV(x, i), GETV(lambda, i),
+                        GETV(lower, i), GETV(upper, i),
+                        throw_warning);
   
-  if (log_prob)
-    p = Rcpp::log(p);
+  if (!log_prob)
+    p = Rcpp::exp(p);
   
   if (throw_warning)
     Rcpp::warning("NaNs produced");

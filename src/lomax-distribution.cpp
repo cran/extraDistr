@@ -11,6 +11,8 @@ using std::floor;
 using std::ceil;
 using Rcpp::NumericVector;
 
+using std::log1p;
+
 
 /*
 *  Lomax distribution
@@ -28,49 +30,45 @@ using Rcpp::NumericVector;
 *
 */
 
-inline double pdf_lomax(double x, double lambda, double kappa,
-                        bool& throw_warning) {
-  if (ISNAN(x) || ISNAN(lambda) || ISNAN(kappa))
-    return x+lambda+kappa;
-  if (lambda <= 0.0 || kappa <= 0.0) {
-    throw_warning = true;
-    return NAN;
-  }
-  if (x <= 0.0)
-    return 0.0;
-  return lambda*kappa / pow(1.0+lambda*x, kappa+1.0);
-}
 
 inline double logpdf_lomax(double x, double lambda, double kappa,
                            bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(lambda) || ISNAN(kappa))
     return x+lambda+kappa;
+#endif
   if (lambda <= 0.0 || kappa <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   if (x <= 0.0)
     return R_NegInf;
-  return log(lambda) + log(kappa) - log(1.0+lambda*x)*(kappa+1.0);
+  // lambda*kappa / pow(1.0+lambda*x, kappa+1.0);
+  return log(lambda) + log(kappa) - log1p(lambda*x)*(kappa+1.0);
 }
 
 inline double cdf_lomax(double x, double lambda, double kappa,
                         bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(lambda) || ISNAN(kappa))
     return x+lambda+kappa;
+#endif
   if (lambda <= 0.0 || kappa <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   if (x <= 0.0)
     return 0.0;
-  return 1.0 - pow(1.0+lambda*x, -kappa);
+  // 1.0 - pow(1.0+lambda*x, -kappa);
+  return 1.0 - exp(log1p(lambda*x) * (-kappa));
 }
 
 inline double invcdf_lomax(double p, double lambda, double kappa,
                            bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(lambda) || ISNAN(kappa))
     return p+lambda+kappa;
+#endif
   if (lambda <= 0.0 || kappa <= 0.0 || !VALID_PROB(p)) {
     throw_warning = true;
     return NAN;

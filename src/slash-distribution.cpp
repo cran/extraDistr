@@ -25,22 +25,26 @@ using Rcpp::NumericVector;
 
 inline double pdf_slash(double x, double mu, double sigma,
                         bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma))
     return x+mu+sigma;
+#endif
   if (sigma <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   double z = (x - mu)/sigma;
   if (z == 0.0)
-    return 1.0/(2.0 * SQRT_2_PI);
+    return 0.19947114020071635; // 1.0/(2.0 * SQRT_2_PI);
   return ((PHI_0 - phi(z))/(z*z))/sigma;
 }
 
 inline double cdf_slash(double x, double mu, double sigma,
                         bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma))
     return x+mu+sigma;
+#endif
   if (sigma <= 0.0) {
     throw_warning = true;
     return NAN;
@@ -61,7 +65,6 @@ inline double rng_slash(double mu, double sigma,
   double u = rng_unif();
   return z/u*sigma + mu;
 }
-
 
 
 // [[Rcpp::export]]

@@ -11,6 +11,7 @@ using std::floor;
 using std::ceil;
 using Rcpp::NumericVector;
 
+using std::log1p;
 
 /*
 *  Kumaraswamy distribution
@@ -30,21 +31,27 @@ using Rcpp::NumericVector;
 
 inline double pdf_kumar(double x, double a, double b,
                         bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(a) || ISNAN(b))
     return x+a+b;
+#endif
   if (a <= 0.0 || b <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   if (x < 0.0 || x > 1.0)
     return 0.0;
+  // is the support [0,1] or (0,1) ?
+  // log(a) + log(b) + log(x)*(a-1.0) + log1p(-pow(x, a))*(b-1.0);
   return a*b * pow(x, a-1.0) * pow(1.0-pow(x, a), b-1.0);
 }
 
 inline double cdf_kumar(double x, double a, double b,
                         bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(a) || ISNAN(b))
     return x+a+b;
+#endif
   if (a <= 0.0 || b <= 0.0) {
     throw_warning = true;
     return NAN;
@@ -58,8 +65,10 @@ inline double cdf_kumar(double x, double a, double b,
 
 inline double invcdf_kumar(double p, double a, double b,
                            bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(a) || ISNAN(b))
     return p+a+b;
+#endif
   if (a <= 0.0 || b <= 0.0 || !VALID_PROB(p)) {
     throw_warning = true;
     return NAN;
@@ -74,19 +83,6 @@ inline double rng_kumar(double a, double b, bool& throw_warning) {
   }
   double u = rng_unif();
   return pow(1.0 - pow(u, 1.0/b), 1.0/a);
-}
-
-inline double logpdf_kumar(double x, double a, double b,
-                           bool& throw_warning) {
-  if (ISNAN(x) || ISNAN(a) || ISNAN(b))
-    return NA_REAL;
-  if (a <= 0.0 || b <= 0.0) {
-    throw_warning = true;
-    return NAN;
-  }
-  if (x < 0.0 || x > 1.0)
-    return R_NegInf;
-  return log(a) + log(b) + log(x)*(a-1.0) + log(1.0 - pow(x, a))*(b-1.0);
 }
 
 

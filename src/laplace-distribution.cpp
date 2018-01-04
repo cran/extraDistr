@@ -31,37 +31,44 @@ using Rcpp::NumericVector;
  *
  */
 
-inline double pdf_laplace(double x, double mu, double sigma,
-                          bool& throw_warning) {
+inline double logpdf_laplace(double x, double mu, double sigma,
+                             bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma))
     return x+mu+sigma;
+#endif
   if (sigma <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   double z = abs(x-mu)/sigma;
-  return exp(-z)/(2.0*sigma);
+  // exp(-z)/(2.0*sigma);
+  return -z - LOG_2F - log(sigma);
 }
 
 inline double cdf_laplace(double x, double mu, double sigma,
                           bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma))
     return x+mu+sigma;
+#endif
   if (sigma <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   double z = (x-mu)/sigma;
   if (x < mu)
-    return exp(z)/2.0;
+    return exp(z - LOG_2F); // exp(z)/2.0
   else
-    return 1.0 - exp(-z)/2.0;
+    return 1.0 - exp(-z - LOG_2F); // 1.0 - exp(-z)/2.0
 }
 
 inline double invcdf_laplace(double p, double mu, double sigma,
                              bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma))
     return p+mu+sigma;
+#endif
   if (sigma <= 0.0 || !VALID_PROB(p)) {
     throw_warning = true;
     return NAN;
@@ -108,11 +115,11 @@ NumericVector cpp_dlaplace(
   bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_laplace(GETV(x, i), GETV(mu, i),
-                       GETV(sigma, i), throw_warning);
+    p[i] = logpdf_laplace(GETV(x, i), GETV(mu, i),
+                          GETV(sigma, i), throw_warning);
 
-  if (log_prob)
-    p = Rcpp::log(p);
+  if (!log_prob)
+    p = Rcpp::exp(p);
   
   if (throw_warning)
     Rcpp::warning("NaNs produced");

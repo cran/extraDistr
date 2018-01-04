@@ -12,21 +12,26 @@ using std::ceil;
 using Rcpp::NumericVector;
 
 
-inline double pdf_hnorm(double x, double sigma, bool& throw_warning) {
+inline double logpdf_hnorm(double x, double sigma,
+                           bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(sigma))
     return x+sigma;
+#endif
   if (sigma <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   if (x < 0.0)
-    return 0.0;
-  return 2.0 * R::dnorm(x, 0.0, sigma, false);
+    return R_NegInf;
+  return LOG_2F + R::dnorm(x, 0.0, sigma, true);
 }
 
 inline double cdf_hnorm(double x, double sigma, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(sigma))
     return x+sigma;
+#endif
   if (sigma <= 0.0) {
     throw_warning = true;
     return NAN;
@@ -37,8 +42,10 @@ inline double cdf_hnorm(double x, double sigma, bool& throw_warning) {
 }
 
 inline double invcdf_hnorm(double p, double sigma, bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(sigma))
     return p+sigma;
+#endif
   if (sigma <= 0.0 || !VALID_PROB(p)) {
     throw_warning = true;
     return NAN;
@@ -75,11 +82,11 @@ NumericVector cpp_dhnorm(
   bool throw_warning = false;
   
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_hnorm(GETV(x, i), GETV(sigma, i),
-                     throw_warning);
+    p[i] = logpdf_hnorm(GETV(x, i), GETV(sigma, i),
+                        throw_warning);
   
-  if (log_prob)
-    p = Rcpp::log(p);
+  if (!log_prob)
+    p = Rcpp::exp(p);
   
   if (throw_warning)
     Rcpp::warning("NaNs produced");

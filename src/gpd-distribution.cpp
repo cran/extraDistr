@@ -11,6 +11,8 @@ using std::floor;
 using std::ceil;
 using Rcpp::NumericVector;
 
+using std::log1p;
+
 
 /*
 *  Generalized Pareto distribution
@@ -35,54 +37,74 @@ using Rcpp::NumericVector;
 *
 */
 
-inline double pdf_gpd(double x, double mu, double sigma, double xi,
-                      bool& throw_warning) {
+
+inline double logpdf_gpd(double x, double mu, double sigma, double xi,
+                         bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma) || ISNAN(xi))
     return x+mu+sigma+xi;
+#endif
   if (sigma <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   double z = (x-mu)/sigma;
   if (xi != 0.0) {
-    if (x >= mu)
-      return pow(1.0+xi*z, -(xi+1.0)/xi)/sigma;
-    else
-      return 0.0;
+    if (z > 0 && 1.0+xi*z > 0.0) {
+      // pow(1.0+xi*z, -(xi+1.0)/xi)/sigma;
+      return log1p(xi*z) * (-(xi+1.0)/xi) - log(sigma); 
+    } else {
+      return R_NegInf;
+    }
   } else {
-    if (x >= mu && x <= (mu - sigma/xi))
-      return exp(-z)/sigma;
-    else
-      return 0.0;
+    if (z > 0 && 1.0+xi*z > 0.0) {
+      // exp(-z)/sigma;
+      return -z - log(sigma);
+    } else {
+      return R_NegInf;
+    }
   }
 }
 
 inline double cdf_gpd(double x, double mu, double sigma, double xi,
                       bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma) || ISNAN(xi))
     return x+mu+sigma+xi;
+#endif
   if (sigma <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   double z = (x-mu)/sigma;
   if (xi != 0.0) {
-    if (x >= mu)
-      return 1.0 - pow(1.0+xi*z, -1.0/xi);
-    else
-      return 0.0;
+    if (z > 0 && 1.0+xi*z > 0.0) {
+      // 1.0 - pow(1.0+xi*z, -1.0/xi);
+      return 1.0 - exp(log1p(xi*z) * (-1.0/xi));
+    } else {
+      if (z > 0 && z >= -1/xi)
+        return 1.0;
+      else
+        return 0.0;
+    }
   } else {
-    if (x >= mu && x <= (mu - sigma/xi))
+    if (z > 0 && 1.0+xi*z > 0.0) {
       return 1.0 - exp(-z);
-    else
-      return 0.0;
+    } else {
+      if (z > 0 && z >= -1/xi)
+        return 1.0;
+      else
+        return 0.0;
+    }
   }
 }
 
 inline double invcdf_gpd(double p, double mu, double sigma, double xi,
                          bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma) || ISNAN(xi))
     return p+mu+sigma+xi;
+#endif
   if (sigma <= 0.0 || !VALID_PROB(p)) {
     throw_warning = true;
     return NAN;
@@ -99,11 +121,13 @@ inline double rng_gpd(double mu, double sigma, double xi,
     throw_warning = true;
     return NA_REAL;
   }
-  double u = rng_unif();
+  double u, v;
+  u = rng_unif();
+  v = R::exp_rand(); // -log(rng_unif())
   if (xi != 0.0)
     return mu + sigma * (pow(u, -xi)-1.0)/xi;
   else
-    return mu - sigma * log(u);
+    return mu - sigma * v;
 }
 
 
@@ -132,12 +156,12 @@ NumericVector cpp_dgpd(
   bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_gpd(GETV(x, i), GETV(mu, i),
-                   GETV(sigma, i), GETV(xi, i),
-                   throw_warning);
+    p[i] = logpdf_gpd(GETV(x, i), GETV(mu, i),
+                      GETV(sigma, i), GETV(xi, i),
+                      throw_warning);
 
-  if (log_prob)
-    p = Rcpp::log(p);
+  if (!log_prob)
+    p = Rcpp::exp(p);
   
   if (throw_warning)
     Rcpp::warning("NaNs produced");

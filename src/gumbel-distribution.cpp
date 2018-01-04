@@ -29,24 +29,30 @@ using Rcpp::NumericVector;
  *
  */
 
-inline double pdf_gumbel(double x, double mu, double sigma,
-                         bool& throw_warning) {
+inline double logpdf_gumbel(double x, double mu, double sigma,
+                            bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma))
     return x+mu+sigma;
+#endif
   if (sigma <= 0.0) {
     throw_warning = true;
     return NAN;
   }
   if (!R_FINITE(x))
-    return 0.0;
+    return R_NegInf;
   double z = (x-mu)/sigma;
-  return exp(-(z+exp(-z)))/sigma;
+  // exp(-(z+exp(-z)))/sigma;
+  return -(z+exp(-z)) - log(sigma);
 }
+
 
 inline double cdf_gumbel(double x, double mu, double sigma,
                          bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(x) || ISNAN(mu) || ISNAN(sigma))
     return x+mu+sigma;
+#endif
   if (sigma <= 0.0) {
     throw_warning = true;
     return NAN;
@@ -57,8 +63,10 @@ inline double cdf_gumbel(double x, double mu, double sigma,
 
 inline double invcdf_gumbel(double p, double mu, double sigma,
                             bool& throw_warning) {
+#ifdef IEEE_754
   if (ISNAN(p) || ISNAN(mu) || ISNAN(sigma))
     return p+mu+sigma;
+#endif
   if (sigma <= 0.0 || !VALID_PROB(p)) {
     throw_warning = true;
     return NAN;
@@ -72,8 +80,8 @@ inline double rng_gumbel(double mu, double sigma,
     throw_warning = true;
     return NA_REAL;
   }
-  double u = rng_unif();
-  return mu - sigma * log(-log(u));
+  double u = R::exp_rand(); // -log(rng_unif())
+  return mu - sigma * log(u);
 }
 
 
@@ -99,11 +107,11 @@ NumericVector cpp_dgumbel(
   bool throw_warning = false;
 
   for (int i = 0; i < Nmax; i++)
-    p[i] = pdf_gumbel(GETV(x, i), GETV(mu, i),
-                      GETV(sigma, i), throw_warning);
+    p[i] = logpdf_gumbel(GETV(x, i), GETV(mu, i),
+                         GETV(sigma, i), throw_warning);
 
-  if (log_prob)
-    p = Rcpp::log(p);
+  if (!log_prob)
+    p = Rcpp::exp(p);
   
   if (throw_warning)
     Rcpp::warning("NaNs produced");
