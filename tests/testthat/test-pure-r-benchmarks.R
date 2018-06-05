@@ -33,6 +33,7 @@ test_that("Compare PDF's/PMF's to pure-R benchmarks", {
   expect_equal(dgpd(x, 1, 1, -1), dgpdR(x, 1, 1, -1))
   expect_equal(dgumbel(x, 1, 1), dgumbelR(x, 1, 1))
   expect_equal(dinvgamma(x, 1, 1), dinvgammaR(x, 1, 1))
+  expect_equal(dinvgamma(x, 1.2, 0.9), dinvgammaR(x, 1.2, 0.9))
   expect_equal(dlaplace(x, -1, 5), dlaplaceR(x, -1, 5))
   expect_equal(dlaplace(x, 9999, 0.000001), dlaplaceR(x, 9999, 0.000001))
   expect_warning(expect_equal(dlgser(x, 0.5), dlgserR(x, 0.5)))
@@ -43,6 +44,20 @@ test_that("Compare PDF's/PMF's to pure-R benchmarks", {
   expect_equal(dpower(x, 1, 1), dpowerR(x, 1, 1))
   expect_equal(drayleigh(x, 1), drayleighR(x, 1))
   expect_equal(dsgomp(x, 0.5, 1), dsgompR(x, 0.5, 1))
+  
+})
+
+
+test_that("Compare dinvgamma to actuar implementation", {
+  
+  skip_on_cran()
+  skip_if_not_installed("actuar")
+  
+  x <- c(-1e5, -100, -10, -5.5, -5, -1.01, -1, -0.5, 0.001, 0,
+         0.001, 0.5, 1, 1.01, 5, 5.5, 10, 100, 1e5)
+  
+  expect_equal(dinvgamma(x, 1.2, 0.9), actuar::dinvgamma(x, 1.2, scale=0.9))
+  expect_equal(pinvgamma(x, 1.2, 0.9), actuar::pinvgamma(x, 1.2, scale=0.9))
   
 })
 
@@ -180,7 +195,7 @@ test_that("Compare to distributions from VGAM package", {
 })
 
 
-test_that("Check against the parameter values tested in greta", {
+test_that("Check against the parameter values tested in VGAM", {
   
   x <- c(-1e5, -100, -10, -5.5, -5, -1.01, -1, -0.5, 0.001, 0,
          0.001, 0.5, 1, 1.01, 5, 5.5, 10, 100, 1e5)
@@ -192,9 +207,8 @@ test_that("Check against the parameter values tested in greta", {
   expect_warning(expect_equal(dbbinom(x, 10, 0.8, 1.2),
                               VGAM::dbetabinom.ab(x, 10, 0.8, 1.2)))
   
-  expect_equal(dinvgamma(x, 1.2, 0.9), dinvgammaR(x, 1.2, 0.9))
-  
-  expect_equal(dpareto(x, 1.9, 2.3), VGAM::dpareto(x, 1.9, 2.3))
+  expect_equal(dpareto(x, 1.9, 2.3), dparetoR(x, 1.9, 2.3))
+  expect_equal(dpareto(x, 2.3, 1.9), VGAM::dpareto(x, 1.9, 2.3)) # reverse order of params!
   
   expect_equal(dlst(x, 3, -0.9, 2), dt((x+0.9)/2, df = 3)/2)
   
@@ -205,31 +219,46 @@ test_that("Check against the parameter values tested in greta", {
 })
 
 
-test_that("Compare ddirichlet to Compositional implementation", {
+test_that("Compare with LaplacesDemon package implementations", {
   
   skip_on_cran()
-  skip_if_not_installed("Compositional")
+  skip_if_not_installed("LaplacesDemon")
   
   alpha <- runif(5, 0, 3)
   x <- rdirichlet(5000, alpha)
   
   expect_equal(ddirichlet(x, alpha),
-               Compositional::ddiri(x, alpha, logged = FALSE))
+               LaplacesDemon::ddirichlet(x, alpha))
   
   alpha <- c(0.0001, 0.0001, 0.0001, 0.0001, 0.0001)
   
   expect_equal(ddirichlet(x, alpha),
-               Compositional::ddiri(x, alpha, logged = FALSE))
+               LaplacesDemon::ddirichlet(x, alpha))
   
   alpha <- c(1000, 1000, 1000, 1000, 1000)
   
   expect_equal(ddirichlet(x, alpha),
-               Compositional::ddiri(x, alpha, logged = FALSE))
+               LaplacesDemon::ddirichlet(x, alpha))
   
   alpha <- c(1e-4, 10000, 100, 1e-5, 1000)
   
   expect_equal(ddirichlet(x, alpha),
-               Compositional::ddiri(x, alpha, logged = FALSE))
+               LaplacesDemon::ddirichlet(x, alpha))
+  
+  # x <- c(-1e5, -100, -10, -5.5, -5, -1.01, -1, -0.5, 0.001, 0,
+  #        0.001, 0.5, 1, 1.01, 5, 5.5, 10, 100, 1e5)
+  # 
+  # expect_equal(dbern(x, 0.32), LaplacesDemon::dbern(x, 0.32))
+  # expect_equal(dgpd(x, 0.2, 3.4, 1.4), LaplacesDemon::dgpd(x, 0.2, 3.4, 1.4))
+  # expect_equal(dhcauchy(x, 2.6), LaplacesDemon::dhalfcauchy(x, 2.6))
+  # expect_equal(dhnorm(x, 8.3), LaplacesDemon::dhalfnorm(x, 8.3))
+  # expect_equal(dht(x, sigma=3.4, nu=7), LaplacesDemon::dhalft(x, scale=3.4, nu=7))
+  # expect_equal(dinvchisq(x, 2.3, 5), LaplacesDemon::dinvchisq(x, 2.3, 5))
+  # expect_equal(dinvgamma(x, 7.6, 3), LaplacesDemon::dinvgamma(x, 7.6, 3))
+  # expect_equal(dwald(x, -2, 6), LaplacesDemon::dinvgaussian(x, -2, 6))
+  # expect_equal(dpareto(x, 5, 6), LaplacesDemon::dpareto(x, 5, 6))
+  # 
+  # expect_equal(dcat(), LaplacesDemon::dcat())
   
 })
 

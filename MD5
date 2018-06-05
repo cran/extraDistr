@@ -1,6 +1,6 @@
-16cfa1d11a112c631a24f39dbfd92192 *DESCRIPTION
+241dd628a5d10f439cd697bfc204b0a6 *DESCRIPTION
 15b9fdd4387687f3dc67aa844a473d33 *NAMESPACE
-f5022aea94ba137dd464a41f4b732443 *NEWS.md
+a7cc4ed83f9e96f4d051bc04d0c7aa6b *NEWS.md
 c4b22f79ae8df57455176629da5aafab *R/RcppExports.R
 a513d5279b2d2e45f20a849b6321cc70 *R/bernoulli-distribution.R
 04970773722479d2b4cfbf2097650b1f *R/beta-binomial-distribution.R
@@ -31,7 +31,7 @@ e45fe9c80150e2e9d14219be4a093841 *R/gev-distribution.R
 fa16f7efa6f3815580e5561039e12d9a *R/half-t-distribution.R
 285352f87fafdee9f503ec7d5b1806ae *R/huber-distribution.R
 02eed15c496446cfee265508193a8a75 *R/inverse-chi-squared-distribution.R
-46ab46c33bd08693cbcbd339a60b4b63 *R/inverse-gamma-distribution.R
+7ecf8c10641304c9f7f82a1870889563 *R/inverse-gamma-distribution.R
 0e221376c86815050eaa291cb6497656 *R/kumaraswamy-distribution.R
 8fc26a7bd877c2b77ddee3d0cdf84309 *R/laplace-distribution.R
 d2dbdb536053f3a35d6c6f9e2cfb1ca7 *R/location-scale-t-distribution.R
@@ -88,7 +88,7 @@ f7bfd9c1fde8ee923e6e4713b58fb4eb *man/HalfCauchy.Rd
 e1ecaec3e6082c22f162271910f9ee87 *man/HalfT.Rd
 ebe1abb8bb588d9077b29e86e17775fe *man/Huber.Rd
 6aa7fc68622a481c1679c97334c45e75 *man/InvChiSq.Rd
-ea94e9bd018f738ae799052ec6e6b053 *man/InvGamma.Rd
+ddf028981f6553fc5768f60b21369b7f *man/InvGamma.Rd
 7e41a5655e91e0dac8473be93b27d8ef *man/Kumaraswamy.Rd
 d01869608da0cad7355aec7ce8143148 *man/Laplace.Rd
 0db5485d56ae8fcbfa4b3d2fa24966b2 *man/LocationScaleT.Rd
@@ -146,7 +146,7 @@ fae5dff129434f3a3ec524da02c260f4 *src/half-cauchy-distribution.cpp
 412794869c09ab4999fba669a18aa785 *src/half-normal-distribution.cpp
 081c92799c02001da63a32daf1366012 *src/half-t-distribution.cpp
 6ba888c23dfc7e1ba55bf6a13dcc7565 *src/huber-distribution.cpp
-151f36581b7902dc0bb81f0bf67a5290 *src/inverse-gamma-distribution.cpp
+4ce1c471ec42842cfcf184659a06bb8a *src/inverse-gamma-distribution.cpp
 92178a4d1cb792a89f1b0fb6b50e7866 *src/kumaraswamy-distribution.cpp
 47d9574933bc2586fe5ec87140d0d799 *src/laplace-distribution.cpp
 e09a3e5536f60d6a5229d42a59b00b7c *src/location-scale-t-distribution.cpp
@@ -179,7 +179,7 @@ c6934011913ccc82ac7fa71badf0eab1 *src/tuckey-lambda-distribution.cpp
 e54b798f391160809a0168f3b8bcb26d *src/zero-inflated-negative-binomial-distribution.cpp
 e252edd32fdd1c857fce5d22ee5fa448 *src/zero-inflated-poisson-distribution.cpp
 ce407f605dba790d131ef0a3e9d33f9d *tests/testthat.R
-b2af22a982e32652c776a63ca8f7270d *tests/testthat/helper_pure_r_implementations.R
+a80083dc5d3797f3f14a48000703b30d *tests/testthat/helper_pure_r_implementations.R
 e54cb3ca7647ee48de32145db7ce530d *tests/testthat/test-NAs.R
 8444bd9fd5953ee5944bf259b037c605 *tests/testthat/test-discrete-sum-to-unity.R
 f4bb951577dd9aeb391821b8a8147e1f *tests/testthat/test-discrete.R
@@ -191,7 +191,7 @@ cff0a287feff0643b3d7c370eba114eb *tests/testthat/test-misc.R
 e1a99930634f6e329de4f36d428e75a9 *tests/testthat/test-non-negative.R
 eac8881f31fb03b23073b034b95489d4 *tests/testthat/test-p-r-random-tests.R
 cafc9febdad756959c0b17653f72690a *tests/testthat/test-probabilities.R
-d6f348cb172d756e57ad514fc0488afc *tests/testthat/test-pure-r-benchmarks.R
+1949d9583a21ee2a2eb4ce18d814734f *tests/testthat/test-pure-r-benchmarks.R
 dc614194e1ab92c34940bd14399608ee *tests/testthat/test-quantile-functions.R
 bda720e1eb8480e73b3eeba1b96e8a48 *tests/testthat/test-rng-coverge.R
 eca05f0ed4dba9d0e78bb3ffe7f27a4c *tests/testthat/test-rtnorm-in-bounds.R
