@@ -34,7 +34,7 @@ inline double logpmf_bnbinom(double k, double r, double alpha,
   if (ISNAN(k) || ISNAN(r) || ISNAN(alpha) || ISNAN(beta))
     return k+r+alpha+beta;
 #endif
-  if (alpha <= 0.0 || beta <= 0.0 || r < 0.0 || !isInteger(r, false)) {
+  if (alpha <= 0.0 || beta <= 0.0 || r < 0.0) {
     throw_warning = true;
     return NAN;
   }
@@ -103,7 +103,7 @@ inline std::vector<double> cdf_bnbinom_table(double k, double r,
 inline double rng_bnbinom(double r, double alpha,
                           double beta, bool& throw_warning) {
   if (ISNAN(r) || ISNAN(alpha) || ISNAN(beta) || alpha <= 0.0 ||
-      beta <= 0.0 || r < 0.0 || !isInteger(r, false)) {
+      beta <= 0.0 || r < 0.0) {
     throw_warning = true;
     return NA_REAL;
   }
@@ -176,7 +176,17 @@ NumericVector cpp_pbnbinom(
   bool throw_warning = false;
 
   std::map<std::tuple<int, int, int>, std::vector<double>> memo;
-  double mx = finite_max_int(x);
+  
+  // maximum modulo size.length(), > 0
+  int n = x.length();
+  int k = size.length();
+  NumericVector mx(k, 0.0);
+  for (int i = 0; i < std::max(n, k); i++) {
+    double xi = GETV(x, i);
+    if (mx[i % k] < xi && R_FINITE(xi)) {
+      mx[i % k] = xi;
+    }
+  }
   
   for (int i = 0; i < Nmax; i++) {
     
@@ -191,8 +201,7 @@ NumericVector cpp_pbnbinom(
     }
 #endif
     
-    if (GETV(alpha, i) <= 0.0 || GETV(beta, i) <= 0.0 ||
-               GETV(size, i) < 0.0 || !isInteger(GETV(size, i), false)) {
+    if (GETV(alpha, i) <= 0.0 || GETV(beta, i) <= 0.0 || GETV(size, i) < 0.0) {
       throw_warning = true;
       p[i] = NAN;
     } else if (GETV(x, i) < 0.0) {
@@ -211,7 +220,8 @@ NumericVector cpp_pbnbinom(
       )];
       
       if (!tmp.size()) {
-        tmp = cdf_bnbinom_table(mx, GETV(size, i), GETV(alpha, i), GETV(beta, i));
+        //double mxi = std::min(mx[i % size.length()], GETV(size, i));
+        tmp = cdf_bnbinom_table(mx[i % size.length()], GETV(size, i), GETV(alpha, i), GETV(beta, i));
       }
       p[i] = tmp[to_pos_int(GETV(x, i))];
       

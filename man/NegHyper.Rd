@@ -17,7 +17,7 @@ qnhyper(p, n, m, r, lower.tail = TRUE, log.p = FALSE)
 rnhyper(nn, n, m, r)
 }
 \arguments{
-\item{x, q}{vector of quantiles representing the number of white balls drawn without
+\item{x, q}{vector of quantiles representing the number of balls drawn without
 replacement from an urn which contains both black and white balls.}
 
 \item{n}{the number of black balls in the urn.}
@@ -99,9 +99,6 @@ UNLV Theses, Dissertations, Professional Papers, and Capstones. Paper 1846.
 \seealso{
 \code{\link[stats]{Hypergeometric}}
 }
-\concept{
-Univariate
-
-Discrete
-}
+\concept{Discrete}
+\concept{Univariate}
 \keyword{distribution}

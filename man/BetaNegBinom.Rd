@@ -9,14 +9,15 @@
 \usage{
 dbnbinom(x, size, alpha = 1, beta = 1, log = FALSE)
 
-pbnbinom(q, size, alpha = 1, beta = 1, lower.tail = TRUE, log.p = FALSE)
+pbnbinom(q, size, alpha = 1, beta = 1, lower.tail = TRUE,
+  log.p = FALSE)
 
 rbnbinom(n, size, alpha = 1, beta = 1)
 }
 \arguments{
 \item{x, q}{vector of quantiles.}
 
-\item{size}{number of trials (zero or more).}
+\item{size}{number of trials (zero or more). Must be strictly positive, need not be integer.}
 
 \item{alpha, beta}{non-negative parameters of the beta distribution.}
 
@@ -86,9 +87,6 @@ lines(xx, pbnbinom(xx, 1000, 5, 13), col = "red", lwd = 2)
 \seealso{
 \code{\link[stats]{Beta}}, \code{\link[stats]{NegBinomial}}
 }
-\concept{
-Univariate
-
-Discrete
-}
+\concept{Discrete}
+\concept{Univariate}
 \keyword{distribution}

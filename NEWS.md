@@ -1,4 +1,14 @@
 
+### 1.8.10
+
+* Now zero-inflated negative-binomial (#12) and beta negative-binomial distributions (#14)
+  do not have integer-only constraint on `size` parameter.
+* Fixed mistakes in the zero-inflated Poisson distribution documentation (#15) and
+  negative hypergeometric distribution documentation.
+* Minor changes towards future Rcpp STRICT_R_HEADERS compatibility.
+* Fixed bug in vectorization code for `pbbinom` (#16). Additionally, this should make 
+  `pbbinom` and `pbnbinom` faster when working with large vectors.
+
 ### 1.8.9
 
 * Fixed bug in `dinvgamma` function
