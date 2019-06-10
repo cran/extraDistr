@@ -1,6 +1,6 @@
-6cf5ffe98e03ab60a98b19e7b55cd0f3 *DESCRIPTION
+85281c8ab83c85fedb45f822f34bb4a1 *DESCRIPTION
 15b9fdd4387687f3dc67aa844a473d33 *NAMESPACE
-6cb5441a83a9cb6e315858c65dbaa80a *NEWS.md
+eb86cb63acd13c589980d854e61fa72b *NEWS.md
 d6647dcfb310af5f2a37293e81b74873 *R/RcppExports.R
 a513d5279b2d2e45f20a849b6321cc70 *R/bernoulli-distribution.R
 04970773722479d2b4cfbf2097650b1f *R/beta-binomial-distribution.R
@@ -136,7 +136,7 @@ b259dc4b219954b34906d89f69226d1e *src/discrete-gamma-distribution.cpp
 073e72c377cc13922a75d281d60c467c *src/discrete-normal-distribution.cpp
 dc7c01d11f32f6c137643cddf4ca9f8c *src/discrete-uniform-distribution.cpp
 4e7cccf15d85fd9c4007a463406e2bf4 *src/discrete-weibull-distribution.cpp
-3e6b15694117d55c6cca58a1a3c8de39 *src/frechet-distribution.cpp
+b595b41f7647113360b1f6d8ab2eb972 *src/frechet-distribution.cpp
 055affda74aed3db2820c4e62a14d949 *src/gamma-poisson-distribution.cpp
 21aeaf6e63d5d23dd36ad192095d17a6 *src/gev-distribution.cpp
 967af53f047bab2d3a5de846052e028b *src/gompertz-distribution.cpp
