@@ -1,3 +1,8 @@
+### 1.10.0
+
+* Fixed bug in `rgpd` which produced negative samples.
+* The RcppExports.cpp was fixed by reformatting it thanks to Dirk Eddelbuettel.
+
 ### 1.9.1
 
 * Generated header file, `inst/include/extraDistr.h`, to make C++ code callable 
