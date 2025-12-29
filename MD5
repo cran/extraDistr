@@ -1,4 +1,4 @@
-695d40c216790a6fd36e18750b61b35d *DESCRIPTION
+7c84a17f1877540e8d46e621e0f4d9cb *DESCRIPTION
 15b9fdd4387687f3dc67aa844a473d33 *NAMESPACE
 d620aa97e02ed7f4999246a7a946858d *NEWS.md
 c36b962aa2a35048052ac76c622b94d0 *R/RcppExports.R
@@ -41,7 +41,7 @@ ba1323ce76e2e6e408233441f85141ef *R/logarithmic-series-distribution.R
 9f6db5081617201db31f0bcfec59f03c *R/mixture-of-poisson-distributions.R
 2334815bd6c1ed04ae801b2f495027fa *R/multinomial-distribution.R
 c966e3aab63f906408eb20d6eeccb2c6 *R/multivariate-hypergeometric-distribution.R
-bbf0a524cc57a30eb5cee0d454829095 *R/negative-hypergeometric-distribution.R
+bd74253f9fa3dde2b175928230e9f7a9 *R/negative-hypergeometric-distribution.R
 850300b0daee4d944ed4c71060e2313f *R/non-standard-beta-distribution.R
 5fcb4cbd1434ccde5ea2785073515b49 *R/pareto-distribution.R
 cf3b3d3d7c9ca738539270191f4508a4 *R/power-distribution.R
@@ -99,7 +99,7 @@ f29796a343fb5ae33425249288b20991 *man/LogSeries.Rd
 a6c98f2e4eb7d788c80b19eebf20ea79 *man/MultiHypergeometric.Rd
 9ede8c4a64e4d597d01e6285151c990b *man/Multinomial.Rd
 fdb298a7a1de5e5113f22c4e1572688b *man/NSBeta.Rd
-19613caba82a092b0e38990d3506d87b *man/NegHyper.Rd
+e1d11e75713c78df076df7f33670fdb1 *man/NegHyper.Rd
 0951a686b2df3fe0e4a671692cdc6cba *man/NormalMix.Rd
 31a0d2b471192be7a236858d1ffc7d26 *man/Pareto.Rd
 9b1ade4a160c16bfae0a16efa5517eda *man/PoissonMix.Rd
@@ -119,7 +119,7 @@ fccdb2144aeff42c0c88066eb6e8d130 *man/TukeyLambda.Rd
 e8a465910cfc7db2c34c625765dd259e *man/ZIB.Rd
 edc31120a70b2e1b3bb9dc28388ddc26 *man/ZINB.Rd
 8438113bea17ef0b9083b057dcc3f563 *man/ZIP.Rd
-64fba0c34e4827295472ec0a1d3b3e2c *man/extraDistr-package.Rd
+e2298cdd083c59875f1fba274fbba3d0 *man/extraDistr-package.Rd
 34c82048b4154dc1d4efe16cc8240bbd *src/RcppExports.cpp
 d82f661ad2377f2abff74f7d790a8253 *src/bernoulli-distribution.cpp
 7c088d786e0fa633e476f40fc965315f *src/beta-binomial-distribution.cpp

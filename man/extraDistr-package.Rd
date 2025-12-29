@@ -2,7 +2,6 @@
 % Please edit documentation in R/extraDistr-package.R
 \docType{package}
 \name{extraDistr-package}
-\alias{extraDistr}
 \alias{extraDistr-package}
 \title{extraDistr: Additional Univariate and Multivariate Distributions}
 \description{
@@ -31,6 +30,17 @@ Useful links:
   \item \url{https://github.com/twolodzko/extraDistr}
   \item Report bugs at \url{https://github.com/twolodzko/extraDistr/issues}
 }
+
+
+Useful links:
+\itemize{
+  \item \url{https://github.com/twolodzko/extraDistr}
+  \item Report bugs at \url{https://github.com/twolodzko/extraDistr/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Tymoteusz Wolodzko \email{twolodzko+extradistr@gmail.com}
 
 }
 \keyword{internal}

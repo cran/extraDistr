@@ -94,7 +94,7 @@ International Journal of Mathematical Education in Science and Technology, 24(4)
 
 Jones, S.N. (2013). A Gaming Application of the Negative Hypergeometric Distribution.
 UNLV Theses, Dissertations, Professional Papers, and Capstones. Paper 1846.
-\url{https://digitalscholarship.unlv.edu/cgi/viewcontent.cgi?referer=&httpsredir=1&article=2847&context=thesesdissertations}
+\url{https://oasis.library.unlv.edu/cgi/viewcontent.cgi?referer=&httpsredir=1&article=2847&context=thesesdissertations}
 }
 \seealso{
 \code{\link[stats]{Hypergeometric}}
