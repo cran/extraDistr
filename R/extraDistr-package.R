@@ -21,7 +21,6 @@
 #'
 #' All the functions vectorized and coded in C++ using \pkg{Rcpp}.
 #'
-#' @docType package
 #' @name extraDistr-package
 #'
 #' @useDynLib extraDistr, .registration = TRUE

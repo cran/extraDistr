@@ -2,6 +2,7 @@
 % Please edit documentation in R/extraDistr-package.R
 \docType{package}
 \name{extraDistr-package}
+\alias{extraDistr}
 \alias{extraDistr-package}
 \title{extraDistr: Additional Univariate and Multivariate Distributions}
 \description{
@@ -27,20 +28,17 @@ All the functions vectorized and coded in C++ using \pkg{Rcpp}.
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://github.com/twolodzko/extraDistr}
-  \item Report bugs at \url{https://github.com/twolodzko/extraDistr/issues}
-}
-
-
-Useful links:
-\itemize{
-  \item \url{https://github.com/twolodzko/extraDistr}
-  \item Report bugs at \url{https://github.com/twolodzko/extraDistr/issues}
+  \item \url{https://github.com/sigbertklinke/extraDistr}
 }
 
 }
 \author{
-\strong{Maintainer}: Tymoteusz Wolodzko \email{twolodzko+extradistr@gmail.com}
+\strong{Maintainer}: Sigbert Klinke \email{sigbert@wiwi.hu-berlin.de}
+
+Authors:
+\itemize{
+  \item Tymoteusz Wolodzko \email{twolodzko+extradistr@gmail.com}
+}
 
 }
 \keyword{internal}

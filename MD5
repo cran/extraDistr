@@ -1,6 +1,6 @@
-7c84a17f1877540e8d46e621e0f4d9cb *DESCRIPTION
+feb271c4848a750d5f9669d2eb75dae6 *DESCRIPTION
 15b9fdd4387687f3dc67aa844a473d33 *NAMESPACE
-d620aa97e02ed7f4999246a7a946858d *NEWS.md
+e5adc8f4c91dec36cbf1fdfe63b80c2e *NEWS.md
 c36b962aa2a35048052ac76c622b94d0 *R/RcppExports.R
 a513d5279b2d2e45f20a849b6321cc70 *R/bernoulli-distribution.R
 04970773722479d2b4cfbf2097650b1f *R/beta-binomial-distribution.R
@@ -9,7 +9,7 @@ a513d5279b2d2e45f20a849b6321cc70 *R/bernoulli-distribution.R
 14097e62dd229aae5e3772851039eb11 *R/bhattacharjee-distribution.R
 96b5c5273c82495588bc38e1ff1e5de7 *R/birnbaum-saunders-distribution.R
 18da67cc20340fc0e94781fd6fac9da5 *R/bivariate-normal-distribution.R
-9883637db0d529c609fcaaad1e3b3348 *R/bivariate-poisson-distribution.R
+76222ba28e5f1ea2af083dce0c8b62b6 *R/bivariate-poisson-distribution.R
 d814edba8b64d5b2f547c786e867157d *R/categorical-distribution.R
 e1db812ca4327615ed4822e75b1d40f0 *R/dirichlet-distribution.R
 44b37e6ab611a537f7e0779f957b37b0 *R/dirichlet-multinomial-distribution.R
@@ -19,7 +19,7 @@ d93299768ff5495c7f3f27fa32aeefcf *R/discrete-normal-distribution.R
 0dc71fca0dae95476fd3da2b593c792b *R/discrete-uniform-distribution.R
 0341e8c29c629b406d3a596f5fc4bfa5 *R/discrete-weibull-distribution.R
 d41d8cd98f00b204e9800998ecf8427e *R/extraDistr-deprecated.R
-ccf86924948a6fa0b3821d196b14e603 *R/extraDistr-package.R
+920442975aef0f8a118c5f46ae62d1fe *R/extraDistr-package.R
 c0975788a5386435ed869bc4a6905878 *R/frechet-distribution.R
 bbb87724f3e0514093b7eb165c7bd92c *R/gamma-poisson-distribution.R
 e45fe9c80150e2e9d14219be4a093841 *R/gev-distribution.R
@@ -62,7 +62,7 @@ f22aa3532ed571b7a8ba78e4100bab16 *R/zero-inflated-negative-binomial-distribution
 f2821cce9ca7d903dc58b69a95a6acd5 *R/zero-inflated-poisson-distribution.R
 f8a1131d5543f811236801d969522c94 *R/zzz.R
 ea2f206dd6ca3b418f70f86ad022edfa *inst/include/extraDistr.h
-ca43e29781bb4354e1a8a8ec92b49bd9 *inst/include/extraDistr_RcppExports.h
+1e587e09fc1f12e8907f4a8110955814 *inst/include/extraDistr_RcppExports.h
 6e9ca27ae4527aed015e0f33abd33e76 *man/Bernoulli.Rd
 6557e500dd54e776daa583a593ff9c52 *man/BetaBinom.Rd
 6e97ca2697383f48ec24b2cebfe0ffad *man/BetaNegBinom.Rd
@@ -70,7 +70,7 @@ ca43e29781bb4354e1a8a8ec92b49bd9 *inst/include/extraDistr_RcppExports.h
 be5f2d3d4f4c0f8598a0935f6a4ede91 *man/Bhattacharjee.Rd
 82e05e96c91e9ff5043fe3e5df5102cc *man/BirnbaumSaunders.Rd
 b60940d45c9323d1e0c117e4fdb4da3f *man/BivNormal.Rd
-726e4b2c748c936c105a95801a859b48 *man/BivPoiss.Rd
+909f1860396d675c768bea2563274d99 *man/BivPoiss.Rd
 26d56110aeb2468e2246028323f8c702 *man/Categorical.Rd
 81665d455295cf329502183640d390ec *man/DirMnom.Rd
 a38d121574383b4e595021b2b417463f *man/Dirichlet.Rd
@@ -119,8 +119,8 @@ fccdb2144aeff42c0c88066eb6e8d130 *man/TukeyLambda.Rd
 e8a465910cfc7db2c34c625765dd259e *man/ZIB.Rd
 edc31120a70b2e1b3bb9dc28388ddc26 *man/ZINB.Rd
 8438113bea17ef0b9083b057dcc3f563 *man/ZIP.Rd
-e2298cdd083c59875f1fba274fbba3d0 *man/extraDistr-package.Rd
-34c82048b4154dc1d4efe16cc8240bbd *src/RcppExports.cpp
+352f739e629d504749e9d47520c28d38 *man/extraDistr-package.Rd
+8e3e523854430289327d23a8151f8ad9 *src/RcppExports.cpp
 d82f661ad2377f2abff74f7d790a8253 *src/bernoulli-distribution.cpp
 7c088d786e0fa633e476f40fc965315f *src/beta-binomial-distribution.cpp
 39714e42c7cfe75f86b27e7276336da7 *src/beta-negative-binomial-distribution.cpp
