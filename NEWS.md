@@ -1,3 +1,7 @@
+### 1.10.0.3
+
+* Corrected the description of the probability density function/random generation for the Dirichlet distribution (thanks to Thomas Farrar for the report via e-mail). 
+
 ### 1.10.0.2
 
 * Maintanance overtake by Sigbert Klinke, changes in DESCRIPTION, README.md, and NEWS.md.

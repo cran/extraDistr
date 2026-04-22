@@ -40,5 +40,10 @@ Authors:
   \item Tymoteusz Wolodzko \email{twolodzko+extradistr@gmail.com}
 }
 
+Other contributors:
+\itemize{
+  \item Thomas Farrar \email{FarrarT@cput.ac.za} [contributor]
+}
+
 }
 \keyword{internal}

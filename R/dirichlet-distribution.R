@@ -2,8 +2,7 @@
 
 #' Dirichlet distribution
 #'
-#' Density function, cumulative distribution function and random generation
-#' for the Dirichlet distribution.
+#' Density function and random generation for the Dirichlet distribution.
 #'
 #' @param x               \eqn{k}-column matrix of quantiles.
 #' @param n	              number of observations. If \code{length(n) > 1},
@@ -16,9 +15,9 @@
 #'
 #' Probability density function
 #' \deqn{
-#' f(x) = \frac{\Gamma(\sum_k \alpha_k)}{\prod_k \Gamma(\alpha_k)} \prod_k x_k^{k-1}
+#' f(x) = \frac{\Gamma(\sum_k \alpha_k)}{\prod_k \Gamma(\alpha_k)} \prod_k x_k^{\alpha_k-1}
 #' }{
-#' f(x) = \Gamma(sum(\alpha[k])) / prod(\Gamma(\alpha[k])) * prod(x[k]^{k-1})
+#' f(x) = \Gamma(sum(\alpha[k])) / prod(\Gamma(\alpha[k])) * prod(x[k]^{\alpha[k]-1})
 #' }
 #'
 #' @references

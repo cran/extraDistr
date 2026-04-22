@@ -1,6 +1,6 @@
-feb271c4848a750d5f9669d2eb75dae6 *DESCRIPTION
+fc550aafd8310c76deb4282155ebc8a6 *DESCRIPTION
 15b9fdd4387687f3dc67aa844a473d33 *NAMESPACE
-e5adc8f4c91dec36cbf1fdfe63b80c2e *NEWS.md
+ec3f8d5fb5f8ec3bad8ad5d526ecfe70 *NEWS.md
 c36b962aa2a35048052ac76c622b94d0 *R/RcppExports.R
 a513d5279b2d2e45f20a849b6321cc70 *R/bernoulli-distribution.R
 04970773722479d2b4cfbf2097650b1f *R/beta-binomial-distribution.R
@@ -11,7 +11,7 @@ a513d5279b2d2e45f20a849b6321cc70 *R/bernoulli-distribution.R
 18da67cc20340fc0e94781fd6fac9da5 *R/bivariate-normal-distribution.R
 76222ba28e5f1ea2af083dce0c8b62b6 *R/bivariate-poisson-distribution.R
 d814edba8b64d5b2f547c786e867157d *R/categorical-distribution.R
-e1db812ca4327615ed4822e75b1d40f0 *R/dirichlet-distribution.R
+f0b000e6f56b9c2e26f6e8afe887917b *R/dirichlet-distribution.R
 44b37e6ab611a537f7e0779f957b37b0 *R/dirichlet-multinomial-distribution.R
 d17ded874bd8d01e2bd547fa7862c775 *R/discrete-gamma-distribution.R
 c3092be4b139ae7dadcaba4d17e3c07e *R/discrete-laplace-distribution.R
@@ -73,7 +73,7 @@ b60940d45c9323d1e0c117e4fdb4da3f *man/BivNormal.Rd
 909f1860396d675c768bea2563274d99 *man/BivPoiss.Rd
 26d56110aeb2468e2246028323f8c702 *man/Categorical.Rd
 81665d455295cf329502183640d390ec *man/DirMnom.Rd
-a38d121574383b4e595021b2b417463f *man/Dirichlet.Rd
+66a95aac2ddd5660d55063ff21251c7b *man/Dirichlet.Rd
 4d892f05d6a2ee3b1fda2c711754b73d *man/DiscreteGamma.Rd
 f7c82acb914372f6a2e191ab15405f3a *man/DiscreteLaplace.Rd
 a969a57939726ec410cd335477e2642e *man/DiscreteNormal.Rd
@@ -119,7 +119,7 @@ fccdb2144aeff42c0c88066eb6e8d130 *man/TukeyLambda.Rd
 e8a465910cfc7db2c34c625765dd259e *man/ZIB.Rd
 edc31120a70b2e1b3bb9dc28388ddc26 *man/ZINB.Rd
 8438113bea17ef0b9083b057dcc3f563 *man/ZIP.Rd
-352f739e629d504749e9d47520c28d38 *man/extraDistr-package.Rd
+dd5c485d4dd5d58f05ecf0c60f464ca1 *man/extraDistr-package.Rd
 8e3e523854430289327d23a8151f8ad9 *src/RcppExports.cpp
 d82f661ad2377f2abff74f7d790a8253 *src/bernoulli-distribution.cpp
 7c088d786e0fa633e476f40fc965315f *src/beta-binomial-distribution.cpp
