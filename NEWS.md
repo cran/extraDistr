@@ -1,3 +1,7 @@
+### 1.10.0.4
+
+* Updated the description of the Inverse chi-squared and scaled chi-squared distributions (thanks to Thomas Farrar for the report via e-mail). 
+
 ### 1.10.0.3
 
 * Corrected the description of the probability density function/random generation for the Dirichlet distribution (thanks to Thomas Farrar for the report via e-mail). 

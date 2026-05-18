@@ -1,8 +1,8 @@
 Package: extraDistr
 Type: Package
 Title: Additional Univariate and Multivariate Distributions
-Version: 1.10.0.3
-Date: 2026-04-20
+Version: 1.10.0.4
+Date: 2026-05-18
 Authors@R: c(person(given  = "Tymoteusz",
                     family = "Wolodzko",
                     role   = "aut",
@@ -41,12 +41,13 @@ Depends: R (>= 3.1.0)
 LinkingTo: Rcpp, RcppArmadillo
 Imports: Rcpp
 Suggests: testthat, LaplacesDemon, VGAM, evd, skellam, triangle, actuar
-RoxygenNote: 7.3.3
 NeedsCompilation: yes
-Packaged: 2026-04-22 10:48:54 UTC; sigbert
+Config/roxygen2/version: 8.0.0
+RoxygenNote: 7.3.3
+Packaged: 2026-05-18 08:48:53 UTC; sigbert
 Author: Tymoteusz Wolodzko [aut],
   Sigbert Klinke [cre],
   Thomas Farrar [ctb]
 Maintainer: Sigbert Klinke <sigbert@wiwi.hu-berlin.de>
 Repository: CRAN
-Date/Publication: 2026-04-22 12:30:09 UTC
+Date/Publication: 2026-05-18 10:30:07 UTC

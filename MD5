@@ -1,6 +1,6 @@
-fc550aafd8310c76deb4282155ebc8a6 *DESCRIPTION
+81982b44989a6b569988469d4aa13866 *DESCRIPTION
 15b9fdd4387687f3dc67aa844a473d33 *NAMESPACE
-ec3f8d5fb5f8ec3bad8ad5d526ecfe70 *NEWS.md
+ebbf0d026dffd1f8ba943531157ff5d0 *NEWS.md
 c36b962aa2a35048052ac76c622b94d0 *R/RcppExports.R
 a513d5279b2d2e45f20a849b6321cc70 *R/bernoulli-distribution.R
 04970773722479d2b4cfbf2097650b1f *R/beta-binomial-distribution.R
@@ -30,7 +30,7 @@ e45fe9c80150e2e9d14219be4a093841 *R/gev-distribution.R
 586f9680c0f3691ad9cecca4631c6e72 *R/half-normal-distribution.R
 fa16f7efa6f3815580e5561039e12d9a *R/half-t-distribution.R
 285352f87fafdee9f503ec7d5b1806ae *R/huber-distribution.R
-02eed15c496446cfee265508193a8a75 *R/inverse-chi-squared-distribution.R
+972a7e3420f78865cc56664ccf6bd3f7 *R/inverse-chi-squared-distribution.R
 7ecf8c10641304c9f7f82a1870889563 *R/inverse-gamma-distribution.R
 0e221376c86815050eaa291cb6497656 *R/kumaraswamy-distribution.R
 8fc26a7bd877c2b77ddee3d0cdf84309 *R/laplace-distribution.R
@@ -89,7 +89,7 @@ dc14a107a22daf96c6f0f027c556519a *man/HalfCauchy.Rd
 6c9ad10bcaadd0a95c47253301b0f0c9 *man/HalfNormal.Rd
 284730b486e0715fefa6011be5a69860 *man/HalfT.Rd
 fb7a0fb1e96dcd51f92a5f41e53de65c *man/Huber.Rd
-5378c4fa21a54440d892332d15cff509 *man/InvChiSq.Rd
+2550faf2153f91a340ef9b0da983ea51 *man/InvChiSq.Rd
 df666fbc0c41d8e4b0e74f3208d9c512 *man/InvGamma.Rd
 0b48e4bcd2ca2780637004ef0fa29d71 *man/Kumaraswamy.Rd
 cda4ffa746c6bcd0903e1dc681bf0afa *man/Laplace.Rd
