@@ -47,6 +47,10 @@
 #' This is implemented in \code{rcatlp} function parametrized by vector of
 #' log-probabilities \code{log_prob}.
 #' 
+#' Note that category indices in `rcatlp()` are one-based. The first category is returned
+#' as \code{1}. This behavior changed in version 10.0.0.5; previous versions
+#' returned \code{0} for the first category.
+#' 
 #' @references 
 #' Maddison, C. J., Tarlow, D., & Minka, T. (2014). A* sampling.
 #' [In:] Advances in Neural Information Processing Systems (pp. 3086-3094).
@@ -177,6 +181,7 @@ rcatlp <- function(n, log_prob, labels) {
     log_prob <- matrix(log_prob, nrow = 1L)
   
   x <- cpp_rcatlp(n, log_prob)
+  x <- x+1L # Move C++ Index (0-indexing) to R Standard (1-indexing), SK 2026-07-13
   
   k <- ncol(log_prob)
   if (!missing(labels)) {

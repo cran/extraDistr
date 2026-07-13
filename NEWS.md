@@ -1,3 +1,8 @@
+### 1.10.0.5
+
+* Fixed `rcatlp()` so that category indices are returned using 1-based indexing; the first category is now 1 instead of 0 (thanks to Piero Giovanni Luca Porta-Mana for the report via e-mail).
+* Fixed handling of the `labels` argument.
+
 ### 1.10.0.4
 
 * Updated the description of the Inverse chi-squared and scaled chi-squared distributions (thanks to Thomas Farrar for the report via e-mail). 

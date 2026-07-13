@@ -1,8 +1,8 @@
 Package: extraDistr
 Type: Package
 Title: Additional Univariate and Multivariate Distributions
-Version: 1.10.0.4
-Date: 2026-05-18
+Version: 1.10.0.5
+Date: 2026-07-13
 Authors@R: c(person(given  = "Tymoteusz",
                     family = "Wolodzko",
                     role   = "aut",
@@ -14,7 +14,11 @@ Authors@R: c(person(given  = "Tymoteusz",
              person(given  = "Thomas",
                     family = "Farrar",
                     role   = "ctb",
-                    email  = "FarrarT@cput.ac.za")
+                    email  = "FarrarT@cput.ac.za"),
+             person(given  = "Piero Giovanni Luca",
+                    family = "Porta-Mana",
+                    role   = "ctb",
+                    email  = "")                    
             )
 Description: Density, distribution function, quantile function
     and random generation for a number of univariate
@@ -44,10 +48,11 @@ Suggests: testthat, LaplacesDemon, VGAM, evd, skellam, triangle, actuar
 NeedsCompilation: yes
 Config/roxygen2/version: 8.0.0
 RoxygenNote: 7.3.3
-Packaged: 2026-05-18 08:48:53 UTC; sigbert
+Packaged: 2026-07-13 16:37:31 UTC; sk
 Author: Tymoteusz Wolodzko [aut],
   Sigbert Klinke [cre],
-  Thomas Farrar [ctb]
+  Thomas Farrar [ctb],
+  Piero Giovanni Luca Porta-Mana [ctb]
 Maintainer: Sigbert Klinke <sigbert@wiwi.hu-berlin.de>
 Repository: CRAN
-Date/Publication: 2026-05-18 10:30:07 UTC
+Date/Publication: 2026-07-13 18:30:02 UTC

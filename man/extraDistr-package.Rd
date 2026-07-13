@@ -43,6 +43,7 @@ Authors:
 Other contributors:
 \itemize{
   \item Thomas Farrar \email{FarrarT@cput.ac.za} [contributor]
+  \item Piero Giovanni Luca Porta-Mana [contributor]
 }
 
 }

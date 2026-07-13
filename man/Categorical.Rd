@@ -71,6 +71,10 @@ vector of probabilities \eqn{p_1,\dots,p_m}{p[1]....,p[m]}, such that
 \eqn{p_i = \exp(\alpha_i) / [\sum_{j=1}^m \exp(\alpha_j)]}{p[i] = exp(\alpha[i])/sum(exp(\alpha))}.
 This is implemented in \code{rcatlp} function parametrized by vector of
 log-probabilities \code{log_prob}.
+
+Note that category indices in `rcatlp()` are one-based. The first category is returned
+as \code{1}. This behavior changed in version 10.0.0.5; previous versions
+returned \code{0} for the first category.
 }
 \examples{
 
